@@ -1,0 +1,35 @@
+---
+- name: Check current Helm version
+  ansible.builtin.command: helm version -o json
+  register: helm_version_check
+  changed_when: false
+  failed_when: false
+
+- name: Set fact if Helm needs update
+  ansible.builtin.set_fact:
+    helm_installed: >-
+      {{
+        helm_version_check.rc == 0 and
+        (helm_version_check.stdout | from_json).version == helm_version
+      }}
+
+- name: Download official Helm install script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /tmp/get-helm-3
+    mode: '0700'
+  when: not helm_installed | bool
+
+- name: Run Helm install script
+  ansible.builtin.command: /tmp/get-helm-3
+  environment:
+    DESIRED_VERSION: "{{ helm_version }}"
+  register: helm_install_result
+  changed_when: "'helm installed' in helm_install_result.stdout"
+  when: not helm_installed | bool
+
+- name: Clean up Helm install script
+  ansible.builtin.file:
+    path: /tmp/get-helm-3
+    state: absent
+  when: not helm_installed | bool

@@ -1,0 +1,29 @@
+---
+# Фиксированные версии (Enterprise)
+kubernetes_version: "1.31.4"
+kubectl_version: "v{{ kubernetes_version }}"
+helm_version: "v3.16.2"
+
+# Базовые пути
+python_venv_path: "/opt/ansible/venv"
+
+# Базовые системные пакеты
+controller_os_packages:
+  - git
+  - curl
+  - wget
+  - python3-venv
+  - python3-pip
+  - python3-full
+  - apt-transport-https
+  - ca-certificates
+  - gnupg
+  - jq
+
+# Python-зависимости для работы с K8s API
+controller_python_packages:
+  - kubernetes
+  - openshift
+  - hvac
+  - PyYAML
+  - jsonpatch

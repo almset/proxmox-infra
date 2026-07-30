@@ -1,0 +1,9 @@
+---
+- name: Setup Ansible Controller Prerequisites
+  hosts: localhost
+  connection: local
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: controller/prerequisites
