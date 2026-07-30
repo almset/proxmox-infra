@@ -1,0 +1,11 @@
+kubeProxyReplacement: true
+gatewayAPI:
+  enabled: true
+l2announcements:
+  enabled: true # Заменяет MetalLB для bare-metal
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+  ui:
+    enabled: true

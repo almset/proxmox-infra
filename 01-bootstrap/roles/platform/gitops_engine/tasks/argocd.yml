@@ -1,0 +1,46 @@
+---
+- name: Install GitOps Engine via Helm (OCI Preferred)
+  kubernetes.core.helm:
+    name: argocd
+    # ПРЕДПОЧТИТЕЛЬНО OCI. 
+    # ПРИМЕЧАНИЕ: Если версия Ansible kubernetes.core < 3.0.0 или есть сетевые ограничения, 
+    # допускается fallback на HTTPS: chart_ref: "argo/argo-cd" + предварительный helm_repository.
+    chart_ref: "oci://ghcr.io/argoproj/argo-helm/argo-cd"
+    chart_version: "{{ gitops.version }}"
+    release_namespace: "{{ gitops.namespace }}"
+    create_namespace: true
+    state: present
+
+- name: Check if ArgoCD bootstrap application already exists (Idempotent)
+  kubernetes.core.k8s_info:
+    kind: Application
+    name: platform-bootstrap
+    namespace: "{{ gitops.namespace }}"
+    api_version: argoproj.io/v1alpha1
+  register: bootstrap_app_info
+
+- name: Create ArgoCD bootstrap application
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: argoproj.io/v1alpha1
+      kind: Application
+      metadata:
+        name: platform-bootstrap
+        namespace: "{{ gitops.namespace }}"
+        finalizers:
+          - resources-finalizer.argocd.argoproj.io
+      spec:
+        project: default
+        source:
+          repoURL: "{{ gitops.repo_url }}"
+          targetRevision: "{{ gitops.revision }}"
+          path: bootstrap/root
+        destination:
+          server: https://kubernetes.default.svc
+          namespace: "{{ gitops.namespace }}"
+        syncPolicy:
+          automated:
+            prune: true
+            selfHeal: true
+  when: bootstrap_app_info.resources | length == 0

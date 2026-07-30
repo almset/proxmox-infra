@@ -1,0 +1,19 @@
+---
+- name: Bootstrap GitOps Engine
+  hosts: k8s_control_plane
+  become: true
+  
+  module_defaults:
+    kubernetes.core.k8s:
+      kubeconfig: "{{ kubernetes.kubeconfig }}"
+      wait: true
+      wait_timeout: 300
+    kubernetes.core.k8s_info:
+      kubeconfig: "{{ kubernetes.kubeconfig }}"
+    kubernetes.core.helm:
+      kubeconfig: "{{ kubernetes.kubeconfig }}"
+      wait: true
+      wait_timeout: 300
+
+  roles:
+    - role: platform/gitops_engine

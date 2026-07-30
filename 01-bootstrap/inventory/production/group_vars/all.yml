@@ -1,0 +1,12 @@
+---
+kubernetes:
+  # Для RKE2: /etc/rancher/rke2/rke2.yaml
+  # Для kubeadm: /etc/kubernetes/admin.conf
+  kubeconfig: /etc/rancher/rke2/rke2.yaml
+
+gitops:
+  engine: argocd # Драйвер: 'argocd', 'flux' или 'fleet'
+  version: "7.5.0"
+  namespace: gitops-system
+  repo_url: "https://github.com/your-org/platform-gitops.git"
+  revision: "main"

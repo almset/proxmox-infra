@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: prod-eu-cluster-secret
+  namespace: gitops-system
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+    environment: production
+    region: eu
+type: Opaque
+stringData:
+  name: prod-eu
+  server: https://eu.k8s.yourcompany.com:6443
+  config: |
+    {
+      "tlsClientConfig": {
+        "insecure": false,
+        "caData": "BASE64_CA_DATA_HERE"
+      }
+    }
