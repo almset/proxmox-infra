@@ -9,6 +9,7 @@
     chart_version: "{{ gitops.version }}"
     release_namespace: "{{ gitops.namespace }}"
     create_namespace: true
+    kubeconfig: "{{ master_kubeconfig_path }}"  
     state: present
 
 - name: Check if ArgoCD bootstrap application already exists (Idempotent)
@@ -17,6 +18,7 @@
     name: platform-bootstrap
     namespace: "{{ gitops.namespace }}"
     api_version: argoproj.io/v1alpha1
+    kubeconfig: "{{ master_kubeconfig_path }}"
   register: bootstrap_app_info
 
 - name: Create ArgoCD bootstrap application
@@ -43,4 +45,5 @@
           automated:
             prune: true
             selfHeal: true
+    kubeconfig: "{{ master_kubeconfig_path }}"
   when: bootstrap_app_info.resources | length == 0
