@@ -8,3 +8,11 @@
   ansible.builtin.apt:
     name: "{{ controller_os_packages }}"
     state: present
+
+- name: Install prerequisite Python packages
+  ansible.builtin.pip:
+    name: "{{ controller_python_packages }}"
+    virtualenv: "{{ python_venv_path }}"
+    virtualenv_command: python3 -m venv
+    state: present
+  become: true 
