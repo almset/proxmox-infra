@@ -24,6 +24,7 @@ helm_version: "v3.16.2"
 ############################################################
 artifacts_dir: "{{ playbook_dir }}/../artifacts"
 master_kubeconfig_path: "/etc/rancher/rke2/rke2.yaml"
+#master_kubeconfig_path: "{{ artifacts_dir }}/kubeconfig"
 controller_kubeconfig_path: "{{ artifacts_dir }}/kubeconfig"
 python_venv_path: "/opt/ansible/venv"
 kubeconfig_path: "{{ artifacts_dir }}/kubeconfig"

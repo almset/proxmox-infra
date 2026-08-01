@@ -1,7 +1,8 @@
 ---
 - name: Setup Ansible Controller Prerequisites
   hosts: k8s_control_plane
-#  connection: local
+# hosts: localhost
+# connection: local
   become: true
   gather_facts: true
 

@@ -1,20 +1,52 @@
 ---
 - name: Bootstrap GitOps Engine
-  hosts: k8s_control_plane
-  become: true
-  
+  hosts: k8s_control_plane # Выполняем на мастер-нодах
+  become: true             # Требуется для установки пакетов и чтения /etc/rancher/rke2/rke2.yaml
+  gather_facts: true
+
+  vars:
+    # КРИТИЧНО: Заставляем Ansible использовать Python из venv для задач kubernetes.core
+    ansible_python_interpreter: "{{ python_venv_path | default('/opt/ansible/venv') }}/bin/python3"
+    
+    # Путь к kubeconfig (берем из group_vars или используем дефолт RKE2)
+    active_kubeconfig: "{{ kubernetes.kubeconfig | default('/etc/rancher/rke2/rke2.yaml') }}"
+  pre_tasks:
+    - name: Ensure python3-venv, pip, and packaging are present on OS
+      ansible.builtin.apt:
+        name:
+          - python3-venv
+          - python3-pip
+          - python3-packaging
+        state: present
+        update_cache: yes
+
+    - name: Create Python virtual environment for K8s modules
+      ansible.builtin.command: python3 -m venv {{ python_venv_path | default('/opt/ansible/venv') }}
+      args:
+        creates: "{{ python_venv_path | default('/opt/ansible/venv') }}/bin/activate"
+
+    # ИСПОЛЬЗУЕМ command ВМЕСТО модуля pip, чтобы избежать ошибки импорта packaging в пустом venv
+    - name: Bootstrap pip and packaging inside the virtual environment
+      ansible.builtin.command: "{{ python_venv_path | default('/opt/ansible/venv') }}/bin/python3 -m pip install --upgrade pip packaging"
+      register: pip_bootstrap
+      changed_when: "'Requirement already satisfied' not in pip_bootstrap.stdout"
+
+    - name: Install required Python libraries for kubernetes.core modules
+      ansible.builtin.command: "{{ python_venv_path | default('/opt/ansible/venv') }}/bin/python3 -m pip install 'kubernetes>=26.1.0' 'openshift>=0.13.0'"
+      register: pip_install_k8s
+      changed_when: "'Requirement already satisfied' not in pip_install_k8s.stdout"
+  # Задаем дефолты для всех k8s-модулей, чтобы не дублировать kubeconfig в каждой задаче
   module_defaults:
     kubernetes.core.k8s:
-#      kubeconfig: "{{ kubernetes.kubeconfig }}"
-      kubeconfig: "{{ kubeconfig }}"
+      kubeconfig: "{{ active_kubeconfig }}"
       wait: true
-      wait_timeout: 300s
+      wait_timeout: 300
     kubernetes.core.k8s_info:
-      kubeconfig: "{{ kubeconfig }}"
+      kubeconfig: "{{ active_kubeconfig }}"
     kubernetes.core.helm:
-      kubeconfig: "{{ kubeconfig }}"
+      kubeconfig: "{{ active_kubeconfig }}"
       wait: true
-      wait_timeout: 300s
+      wait_timeout: 300
 
   roles:
     - role: platform/gitops_engine
