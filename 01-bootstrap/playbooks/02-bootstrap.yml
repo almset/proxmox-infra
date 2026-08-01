@@ -40,13 +40,13 @@
     kubernetes.core.k8s:
       kubeconfig: "{{ active_kubeconfig }}"
       wait: true
-      wait_timeout: 300
+      #wait_timeout: 300s
     kubernetes.core.k8s_info:
       kubeconfig: "{{ active_kubeconfig }}"
     kubernetes.core.helm:
       kubeconfig: "{{ active_kubeconfig }}"
       wait: true
-      wait_timeout: 300
+      #wait_timeout: 300s
 
   roles:
     - role: platform/gitops_engine
