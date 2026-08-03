@@ -37,7 +37,7 @@
         source:
           repoURL: "{{ gitops.repo_url }}"
           targetRevision: "{{ gitops.revision }}"
-          path: "{{ gitops.path }}"
+          path: bootstrap/root
         destination:
           server: https://kubernetes.default.svc
           namespace: "{{ gitops.namespace }}"

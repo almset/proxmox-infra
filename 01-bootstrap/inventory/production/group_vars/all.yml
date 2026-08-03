@@ -40,9 +40,20 @@ controller_env:
 ############################################################
 # 5. GitOps / Platform
 ############################################################
+#gitops:
+#  engine: argocd
+#  version: "7.5.0"
+#  namespace: gitops-system
+#  #repo_url: "https://github.com/your-org/platform-gitops.git"
+#  repo_url: "https://github.com/almset/k8s-platform-2026.git"
+#  revision: "main"
+
 gitops:
   engine: argocd
-  version: "7.5.0"
+  version: "7.5.0" # или актуальная версия чарта
   namespace: gitops-system
-  repo_url: "https://github.com/your-org/platform-gitops.git"
-  revision: "main"
+  repo_url: "https://github.com/almset/k8s-platform-2026.git" # <-- ПРАВИЛЬНЫЙ URL MONOREPO
+  revision: "master" # или master, или имя ветки
+  path: "02-gitops/bootstrap/root" # <-- Путь внутри этого же репозитория
+
+

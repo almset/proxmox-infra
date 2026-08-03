@@ -10,6 +10,15 @@
     
     # Путь к kubeconfig (берем из group_vars или используем дефолт RKE2)
     active_kubeconfig: "{{ kubernetes.kubeconfig | default('/etc/rancher/rke2/rke2.yaml') }}"
+  module_defaults:
+        kubernetes.core.k8s:
+          kubeconfig: "{{ active_kubeconfig }}"
+          wait: true
+        kubernetes.core.k8s_info:
+          kubeconfig: "{{ active_kubeconfig }}"
+        kubernetes.core.helm:
+          kubeconfig: "{{ active_kubeconfig }}"
+          wait: true
   pre_tasks:
     - name: Ensure python3-venv, pip, and packaging are present on OS
       ansible.builtin.apt:
@@ -36,15 +45,5 @@
       register: pip_install_k8s
       changed_when: "'Requirement already satisfied' not in pip_install_k8s.stdout"
   # Задаем дефолты для всех k8s-модулей, чтобы не дублировать kubeconfig в каждой задаче
-  module_defaults:
-    kubernetes.core.k8s:
-      kubeconfig: "{{ active_kubeconfig }}"
-      wait: true
-    kubernetes.core.k8s_info:
-      kubeconfig: "{{ active_kubeconfig }}"
-    kubernetes.core.helm:
-      kubeconfig: "{{ active_kubeconfig }}"
-      wait: true
-
   roles:
     - role: platform/gitops_engine
