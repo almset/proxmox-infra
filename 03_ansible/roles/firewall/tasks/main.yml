@@ -1,0 +1,21 @@
+---
+# 1. Skip UFW Firewall configuration for hosts gateway or DNS server with own firewall
+- name: Skip firewall role on this host
+  ansible.builtin.meta: end_host
+  when: not firewall_enabled | bool
+
+# 2. Preflight checks
+- name: Include preflight tasks
+  ansible.builtin.import_tasks: preflight.yml
+  tags: [firewall, preflight]
+
+# 3. Validate variables
+- name: Include validate tasks
+  ansible.builtin.import_tasks: validate.yml
+  tags: [firewall, validate]
+
+# 4. UFW configuration
+- name: Include UFW tasks
+  ansible.builtin.import_tasks: ufw.yml
+  tags: [firewall, ufw]
+

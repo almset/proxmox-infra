@@ -1,0 +1,77 @@
+---
+- name: Compute kubeadm facts
+  ansible.builtin.import_tasks: facts.yml
+  tags: [kubeadm, facts]
+
+- name: Include preflight checks
+  ansible.builtin.import_tasks: preflight.yml
+  tags: [kubeadm, preflight]
+
+- name: Include variable validation
+  ansible.builtin.import_tasks: validate.yml
+  tags: [kubeadm, validate]
+
+- name: Include cleanup tasks
+  ansible.builtin.import_tasks: cleanup.yml
+  tags: [kubeadm, cleanup]
+
+- name: Include installation tasks
+  ansible.builtin.import_tasks: install.yml
+  tags: [kubeadm, install]
+
+- name: Include node configuration tasks
+  ansible.builtin.import_tasks: config.yml
+  tags: [kubeadm, config]
+
+# ==============================================================================
+# Mutually exclusive modes: upgrade OR bootstrap OR join
+# ==============================================================================
+
+- name: Include upgrade tasks (exclusive mode — skips bootstrap and join)
+  ansible.builtin.import_tasks: upgrade.yml
+  when: kubeadm_upgrade | bool
+  tags: [kubeadm, upgrade]
+
+- name: Include bootstrap tasks (first control-plane only, not during upgrade)
+  ansible.builtin.import_tasks: bootstrap.yml
+  when:
+    - kubeadm_is_bootstrap | bool
+    - not kubeadm_upgrade | bool
+  tags: [kubeadm, bootstrap]
+
+- name: Include join tasks (additional nodes, not during upgrade)
+  ansible.builtin.import_tasks: join/main.yml
+  when:
+    - not kubeadm_is_bootstrap | bool
+    - not kubeadm_upgrade | bool
+  tags: [kubeadm, join]
+
+# ==============================================================================
+# Common post-install tasks
+# ==============================================================================
+
+- name: Include service management tasks
+  ansible.builtin.import_tasks: service.yml
+  tags: [kubeadm, service]
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Include cluster readiness wait tasks
+  ansible.builtin.import_tasks: wait.yml
+  when: not kubeadm_upgrade | bool
+  tags: [kubeadm, wait]
+
+- name: Include kubeconfig tasks
+  ansible.builtin.import_tasks: kubeconfig.yml
+  when:
+    - kubeadm_is_control_plane | bool
+    - not kubeadm_upgrade | bool
+  tags: [kubeadm, kubeconfig]
+
+- name: Include post-installation validation
+  ansible.builtin.import_tasks: post_validate.yml
+  when:
+    - kubeadm_is_bootstrap | bool
+    - not kubeadm_upgrade | bool
+  tags: [kubeadm, post_validate]

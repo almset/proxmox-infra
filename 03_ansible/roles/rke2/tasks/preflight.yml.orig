@@ -1,0 +1,30 @@
+---
+- name: Check required kernel modules (overlay)
+  ansible.builtin.stat:
+    path: /sys/module/overlay
+  register: _mod_overlay
+  failed_when: not _mod_overlay.stat.exists
+  when: not ansible_check_mode
+
+- name: Check required kernel modules (br_netfilter)
+  ansible.builtin.stat:
+    path: /sys/module/br_netfilter
+  register: _mod_br_netfilter
+  failed_when: not _mod_br_netfilter.stat.exists
+  when: not ansible_check_mode
+
+- name: Check sysctl net.ipv4.ip_forward
+  ansible.builtin.command:
+    cmd: sysctl -n net.ipv4.ip_forward
+  register: _sysctl_ip_forward
+  changed_when: false
+  failed_when: _sysctl_ip_forward.stdout | trim != '1'
+  when: not ansible_check_mode
+
+- name: Check sysctl net.bridge.bridge-nf-call-iptables
+  ansible.builtin.command:
+    cmd: sysctl -n net.bridge.bridge-nf-call-iptables
+  register: _sysctl_bridge
+  changed_when: false
+  failed_when: _sysctl_bridge.stdout | trim != '1'
+  when: not ansible_check_mode

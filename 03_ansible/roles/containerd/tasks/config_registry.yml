@@ -1,0 +1,17 @@
+---
+- name: Create registry certs.d directories
+  ansible.builtin.file:
+    path: "{{ containerd_config_dir }}/certs.d/{{ item.server }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ containerd_registry_mirrors }}"
+  when: containerd_registry_mirrors | length > 0
+
+- name: Generate registry hosts.toml from template (per registry)
+  ansible.builtin.template:
+    src: hosts.toml.j2
+    dest: "{{ containerd_config_dir }}/certs.d/{{ item.server }}/hosts.toml"
+    mode: '0644'
+  loop: "{{ containerd_registry_mirrors }}"
+  when: containerd_registry_mirrors | length > 0
+  notify: Restart containerd

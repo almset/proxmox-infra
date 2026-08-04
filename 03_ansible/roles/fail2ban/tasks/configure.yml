@@ -1,0 +1,63 @@
+---
+- name: Deploy global jail.local configuration
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+  tags:
+    - fail2ban
+    - fail2ban_config
+
+- name: Deploy sshd jail configuration
+  ansible.builtin.template:
+    src: sshd.local.j2
+    dest: /etc/fail2ban/jail.d/10-sshd.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload fail2ban
+  tags:
+    - fail2ban
+    - fail2ban_config
+
+- name: Deploy recidive jail configuration
+  ansible.builtin.template:
+    src: jail-recidive.local.j2
+    dest: /etc/fail2ban/jail.d/05-recidive.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload fail2ban
+  when: fail2ban_recidive.enabled | bool
+  tags:
+    - fail2ban
+    - fail2ban_config
+
+- name: Configure extra jails
+  ansible.builtin.template:
+    src: jail-extra.local.j2
+    dest: "/etc/fail2ban/jail.d/10-{{ item.name }}.local"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ fail2ban_extra_jails }}"
+  loop_control:
+    label: "{{ item.name }}"
+  notify: Reload fail2ban
+  when: fail2ban_extra_jails | length > 0
+  tags:
+    - fail2ban
+    - fail2ban_config
+
+- name: Ensure fail2ban service is in desired state
+  ansible.builtin.systemd:
+    name: "{{ fail2ban_service_name }}"
+    state: "{{ fail2ban_service_state }}"
+    enabled: "{{ fail2ban_service_enabled }}"
+  when: fail2ban_manage_service | bool
+  tags:
+    - fail2ban
+    - fail2ban_service

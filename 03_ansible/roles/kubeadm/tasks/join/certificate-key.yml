@@ -1,0 +1,23 @@
+---
+- name: Verify control plane health before refreshing certs
+  ansible.builtin.command: kubectl --kubeconfig /etc/kubernetes/admin.conf get --raw=/readyz
+  delegate_to: "{{ _cp_host }}"
+  register: _cp_readyz
+  failed_when:
+    - _cp_readyz.rc != 0
+    - "'ok' not in _cp_readyz.stdout"
+  when:
+    - kubeadm_is_join_control_plane | bool
+    - not _kubelet_conf_stat.stat.exists
+
+- name: Generate certificate key for THIS control-plane join
+  ansible.builtin.command: kubeadm init phase upload-certs --upload-certs
+  delegate_to: "{{ _cp_host }}"
+  register: _node_cert_key
+  changed_when: true
+  failed_when:
+    - _node_cert_key.rc != 0
+    - _node_cert_key.stdout is not search('[a-f0-9]{64}')
+  when:
+    - kubeadm_is_join_control_plane | bool
+    - not _kubelet_conf_stat.stat.exists

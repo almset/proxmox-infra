@@ -1,0 +1,27 @@
+---
+argument_specs:
+  main:
+    short_description: Production-ready Kubernetes installation via kubeadm
+    options:
+      kubeadm_role:
+        type: str
+        required: true
+        choices: [control-plane, worker]
+      kubeadm_bootstrap:
+        type: bool
+        default: false
+        description: Set to true ONLY for the first control-plane node being initialized.
+      kubernetes_version:
+        type: str
+        description: Kubernetes version (e.g., "1.30.2").
+      kubeadm_bootstrap_host:
+        type: str
+        description: Explicitly define the bootstrap host for HA clusters.
+      kubeadm_join_token_ttl:
+        type: str
+        default: "2h"
+        description: TTL for dynamically generated join tokens.
+      kubeadm_upgrade:
+        type: bool
+        default: false
+        description: Set to true to perform a cluster upgrade instead of install/join.

@@ -1,0 +1,11 @@
+{
+  "proxmox_url": "https://10.0.10.200:8006/api2/json",
+  "proxmox_node": "pve-prod-01",
+  "proxmox_username": "packer@pam",
+  "proxmox_password": "YOU_PASSWORD_HERE",
+  "vm_storage": "local-ssd-seagate2tb",
+  "iso_storage": "local-hdd-wd2tb",
+  "iso_windows_file": "local-hdd-wd2tb:iso/windows_server_2022_en.iso",
+  "iso_url_windows": "local-hdd-wd2tb:iso/windows_server_2022_en.iso",
+  "iso_virtio_file": "local-hdd-wd2tb:iso/virtio-win.iso"
+}

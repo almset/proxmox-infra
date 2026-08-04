@@ -1,0 +1,38 @@
+---
+- name: Validate | Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Validate | Assert auditd service is running and enabled
+  ansible.builtin.assert:
+    that:
+      - >-
+        (ansible_facts.services['auditd.service']
+         | default(ansible_facts.services['auditd'])).state == 'running'
+      - >-
+        (ansible_facts.services['auditd.service']
+         | default(ansible_facts.services['auditd'])).status == 'enabled'
+    fail_msg: "auditd service is not running or not enabled."
+    success_msg: "auditd service is running and enabled."
+
+- name: Validate | Query auditd daemon status
+  ansible.builtin.command: auditctl -s
+  register: _auditd_status
+  changed_when: false
+  become: true
+  failed_when: false
+
+- name: Validate | Assert auditd daemon is operational
+  ansible.builtin.assert:
+    that:
+      - _auditd_status.rc == 0
+      - _auditd_status.stdout is search('enabled\s+[12]')
+    fail_msg: "auditd daemon is not operational."
+    success_msg: "auditd daemon is operational."
+  when: _auditd_status.rc == 0
+
+- name: Validate | Show daemon status (debug)
+  ansible.builtin.debug:
+    var: _auditd_status.stdout_lines
+  when:
+    - auditd_debug | bool
+    - _auditd_status.rc == 0

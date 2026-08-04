@@ -1,0 +1,25 @@
+---
+galaxy_info:
+  role_name: auditd
+  author: your_name
+  description: Install and configure auditd with custom rules
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bookworm
+    - name: EL
+      versions:
+        - "9"
+  galaxy_tags:
+    - audit
+    - security
+    - linux
+    - compliance
+
+dependencies: []

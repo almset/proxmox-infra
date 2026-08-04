@@ -1,0 +1,64 @@
+---
+- name: Validate rke2_server_url format
+  ansible.builtin.assert:
+    that:
+      - rke2_server_url == "" or rke2_server_url is match('^https://.*')
+    fail_msg: "rke2_server_url must be empty or start with https://"
+    quiet: true
+
+- name: Validate token is provided for all nodes
+  ansible.builtin.assert:
+    that:
+      - rke2_token | length > 0
+    fail_msg: "rke2_token MUST be provided (e.g., via Ansible Vault or group_vars) for all nodes."
+    quiet: true
+
+- name: Validate CIDR formats
+  ansible.builtin.assert:
+    that:
+       - (rke2_cluster_cidr | ansible.utils.ipaddr('net')) != false
+       - (rke2_service_cidr | ansible.utils.ipaddr('net')) != false
+#      - rke2_cluster_cidr is ansible.utils.ipaddr('net')
+#      - rke2_service_cidr is ansible.utils.ipaddr('net')
+    fail_msg: "Cluster CIDR and Service CIDR must be valid IPv4 networks (e.g., 10.42.0.0/16)."
+    quiet: true
+
+- name: Check if RKE2 is already installed
+  ansible.builtin.stat:
+    path: /var/lib/rancher/rke2/bin/rke2
+  register: _rke2_bin_check
+  when: rke2_version | length > 0
+
+- name: Get current installed version
+  ansible.builtin.command:
+    cmd: /var/lib/rancher/rke2/bin/rke2 --version
+  register: _current_version_out
+  changed_when: false
+  failed_when: false
+  when: _rke2_bin_check.stat.exists | default(false)
+
+- name: Extract current version
+  ansible.builtin.set_fact:
+    _current_version: "{{ _current_version_out.stdout | regex_search('v\\d+\\.\\d+') }}"
+  when: _current_version_out.stdout is defined and _current_version_out.stdout | length > 0
+
+- name: Extract target version
+  ansible.builtin.set_fact:
+    _target_version: "{{ rke2_version | regex_search('v\\d+\\.\\d+') }}"
+  when: rke2_version | length > 0
+
+- name: Validate version upgrade path (no skipping, no downgrade)
+  ansible.builtin.assert:
+    that:
+      - _target_version is not defined or _current_version is not defined or (
+          (_target_version | regex_replace('v', '') | split('.'))[1] | int - 
+          (_current_version | regex_replace('v', '') | split('.'))[1] | int == 1
+        )
+    fail_msg: >
+      Invalid version transition: {{ _current_version | default('none') }} -> {{ _target_version | default('none') }}.
+      Upgrades must be sequential (1.29 -> 1.30 -> 1.31). Downgrades and skipping minor versions are blocked.
+    quiet: true
+  when: 
+    - rke2_version | length > 0
+    - _current_version is defined
+    - _target_version is defined

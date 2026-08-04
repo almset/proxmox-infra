@@ -1,0 +1,6 @@
+---
+- name: Reload netfilter-persistent
+  ansible.builtin.command:
+    cmd: netfilter-persistent reload
+  listen: Apply firewall
+  changed_when: false

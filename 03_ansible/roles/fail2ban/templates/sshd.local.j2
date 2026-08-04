@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# SSH jail configuration
+
+[sshd]
+enabled  = {{ fail2ban_sshd.enabled | bool | lower }}
+port     = {{ fail2ban_sshd.port }}
+filter   = sshd
+{% if fail2ban_default.backend != 'systemd' %}
+logpath  = {{ fail2ban_sshd.logpath }}
+{% endif %}
+maxretry = {{ fail2ban_sshd.maxretry }}
+bantime  = {{ fail2ban_sshd.bantime }}
+findtime = {{ fail2ban_sshd.findtime }}

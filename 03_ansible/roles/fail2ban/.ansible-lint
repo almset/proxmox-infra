@@ -1,0 +1,19 @@
+---
+profile: production
+strict: true
+
+skip_list:
+  - experimental
+  - role-name
+  - yaml[line-length]
+
+warn_list:
+  - no-changed-when
+
+enable_list:
+  - no-same-owner
+  - yaml
+
+offline: false
+
+verbosity: 1

@@ -1,0 +1,39 @@
+---
+- name: Post-installation validation
+  block:
+    - name: Verify control plane health (/livez)
+      ansible.builtin.command:
+        cmd: "{{ kubeadm_kubectl_cmd }} get --raw='/livez'"
+      register: _livez
+      changed_when: false
+      failed_when: "'ok' not in _livez.stdout"
+
+    - name: Verify control plane readiness (/readyz)
+      ansible.builtin.command:
+        cmd: "{{ kubeadm_kubectl_cmd }} get --raw='/readyz'"
+      register: _readyz
+      changed_when: false
+      failed_when: "'ok' not in _readyz.stdout"
+
+    - name: Verify all nodes are in Ready state
+      ansible.builtin.command:
+        cmd: "{{ kubeadm_kubectl_cmd }} wait --for=condition=Ready nodes --all --timeout=60s"
+      register: _nodes_ready
+      changed_when: false
+      failed_when: _nodes_ready.rc != 0
+
+    - name: Wait for CoreDNS deployment to be ready
+      ansible.builtin.command:
+        cmd: "{{ kubeadm_kubectl_cmd }} rollout status deployment/coredns -n kube-system --timeout=120s"
+      register: _coredns_ready
+      changed_when: false
+      failed_when: _coredns_ready.rc != 0
+
+    - name: Verify kubelet is using configured CRI
+      ansible.builtin.command:
+        cmd: crictl info
+      register: _crictl_info
+      changed_when: false
+      failed_when: _crictl_info.rc != 0 or 'containerd' not in _crictl_info.stdout
+
+  when: not ansible_check_mode

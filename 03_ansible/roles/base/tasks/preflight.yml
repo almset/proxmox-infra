@@ -1,0 +1,12 @@
+---
+- name: Check DNS resolution
+  command: getent hosts {{ base_dns_test_host }}
+  changed_when: false
+  when: base_check_dns | bool
+
+- name: Check internet connectivity
+  wait_for:
+    host: "{{ base_internet_test_host }}"
+    port: "{{ base_internet_test_port }}"
+    timeout: 10
+  when: base_check_internet | bool

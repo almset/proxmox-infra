@@ -1,0 +1,160 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure /run/sshd exists for sshd -T
+      ansible.builtin.file:
+        path: /run/sshd
+        state: directory
+        mode: '0755'
+
+    - name: Verify SSH config is valid
+      ansible.builtin.command:
+        cmd: sshd -t
+      changed_when: false
+
+    - name: Get effective SSH configuration
+      ansible.builtin.command:
+        cmd: sshd -T
+      register: sshd_effective
+      changed_when: false
+
+    - name: Verify SSH hardening applied (core parameters)
+      ansible.builtin.assert:
+        that:
+          - "'passwordauthentication no' in sshd_effective.stdout"
+          - "'permitrootlogin no' in sshd_effective.stdout"
+          - "'x11forwarding no' in sshd_effective.stdout"
+          - "'pubkeyauthentication yes' in sshd_effective.stdout"
+        fail_msg: "Core SSH hardening not properly applied"
+
+    - name: Verify SSH hardening applied (forwarding and network)
+      ansible.builtin.assert:
+        that:
+          - "'allowtcpforwarding no' in sshd_effective.stdout"
+          - "'allowagentforwarding no' in sshd_effective.stdout"
+          - "'gatewayports no' in sshd_effective.stdout"
+          - "'usedns no' in sshd_effective.stdout"
+          - "'compression no' in sshd_effective.stdout"
+          - "'tcpkeepalive yes' in sshd_effective.stdout"
+        fail_msg: "SSH forwarding/network hardening not properly applied"
+
+    - name: Verify SSH hardening applied (auth and session)
+      ansible.builtin.assert:
+        that:
+          - "'permitemptypasswords no' in sshd_effective.stdout"
+          - "'maxauthtries 4' in sshd_effective.stdout"
+          - "'clientaliveinterval 300' in sshd_effective.stdout"
+          - "'clientalivecountmax 3' in sshd_effective.stdout"
+          - "'logingracetime 60' in sshd_effective.stdout"
+          - "'usepam yes' in sshd_effective.stdout"
+        fail_msg: "SSH auth/session hardening not properly applied"
+
+    - name: Verify SSH config file permissions
+      ansible.builtin.stat:
+        path: /etc/ssh/sshd_config.d/99-hardening.conf
+      register: ssh_file
+
+    - name: Check SSH config permissions
+      ansible.builtin.assert:
+        that:
+          - ssh_file.stat.exists
+          - ssh_file.stat.mode == "0600"
+        fail_msg: "SSH config file missing or has wrong permissions"
+
+    # Проверка, что handler Reload ssh действительно отработал:
+    # если notify был случайно удалён, сервис мог не перезагрузиться
+    # и старые параметры остались в памяти.
+    - name: Verify SSH service is active after reload
+      ansible.builtin.command:
+        cmd: systemctl is-active ssh
+      register: ssh_service_status
+      changed_when: false
+
+    - name: Check SSH service is running
+      ansible.builtin.assert:
+        that:
+          - ssh_service_status.stdout == "active"
+        fail_msg: "SSH service is not active — reload handler may not have run"
+
+    - name: Verify SSH service is enabled
+      ansible.builtin.systemd:
+        name: "{{ hardening_ssh_service_name | default('ssh') }}"
+      register: ssh_service_info
+
+    - name: Check SSH service is enabled at boot
+      ansible.builtin.assert:
+        that:
+          - ssh_service_info.status.Enabled == "enabled"
+        fail_msg: "SSH service is not enabled at boot"
+
+    - name: Verify sysctl config file exists
+      ansible.builtin.stat:
+        path: /etc/sysctl.d/99-hardening.conf
+      register: sysctl_file
+
+    - name: Check sysctl file exists
+      ansible.builtin.assert:
+        that:
+          - sysctl_file.stat.exists
+          - sysctl_file.stat.mode == "0644"
+        fail_msg: "Sysctl config file missing or has wrong permissions"
+
+    - name: Verify sysctl network parameters applied
+      ansible.builtin.command:
+        cmd: sysctl net.ipv4.conf.all.rp_filter
+      register: sysctl_check
+      changed_when: false
+
+    - name: Check sysctl rp_filter value
+      ansible.builtin.assert:
+        that:
+          - "'= 1' in sysctl_check.stdout"
+        fail_msg: "Sysctl rp_filter not applied"
+
+    - name: Verify kernel.randomize_va_space
+      ansible.builtin.command:
+        cmd: sysctl kernel.randomize_va_space
+      register: aslr_check
+      changed_when: false
+
+    - name: Check ASLR enabled
+      ansible.builtin.assert:
+        that:
+          - "'= 2' in aslr_check.stdout"
+        fail_msg: "ASLR not properly configured"
+
+    - name: Verify fs.protected_symlinks
+      ansible.builtin.command:
+        cmd: sysctl fs.protected_symlinks
+      register: symlinks_check
+      changed_when: false
+
+    - name: Check protected symlinks
+      ansible.builtin.assert:
+        that:
+          - "'= 1' in symlinks_check.stdout"
+        fail_msg: "Protected symlinks not enabled"
+
+    - name: Verify sudo config file permissions
+      ansible.builtin.stat:
+        path: /etc/sudoers.d/90-hardening
+      register: sudo_file
+
+    - name: Check sudo file permissions
+      ansible.builtin.assert:
+        that:
+          - sudo_file.stat.exists
+          - sudo_file.stat.mode == "0440"
+        fail_msg: "Sudo config file missing or has wrong permissions"
+
+    - name: Verify sudo config is valid
+      ansible.builtin.command:
+        cmd: visudo -cf /etc/sudoers.d/90-hardening
+      changed_when: false
+
+    - name: Verify sudo config content
+      ansible.builtin.command:
+        cmd: grep -q "Defaults use_pty" /etc/sudoers.d/90-hardening
+      changed_when: false

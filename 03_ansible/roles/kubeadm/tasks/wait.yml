@@ -1,0 +1,67 @@
+---
+- name: Wait for Kubernetes API to be responsive (authenticated readyz check)
+  ansible.builtin.command:
+    cmd: "{{ kubeadm_kubectl_cmd }} get --raw='/readyz'"
+  register: _api_health
+  until: "'ok' in _api_health.stdout"
+  retries: 30
+  delay: 10
+  changed_when: false
+  when: kubeadm_is_control_plane | bool
+
+- name: Check if CNI DaemonSet already exists
+  ansible.builtin.command: >-
+    {{ kubeadm_kubectl_cmd }} get daemonset/{{ kubeadm_cni_daemonsets[kubeadm_cni_plugin] }}
+    -n kube-system --no-headers
+  register: _cni_ds_check
+  changed_when: false
+  failed_when: false
+  when:
+    - kubeadm_is_bootstrap | bool
+    - kubeadm_cni_plugin != 'none'
+
+- name: Copy CNI manifest to remote host (for air-gap support)
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/{{ kubeadm_cni_plugin }}/{{ kubeadm_cni_manifest_version }}.yaml"
+    dest: /tmp/cni-manifest.yaml
+    mode: '0644'
+  when:
+    - kubeadm_is_bootstrap | bool
+    - kubeadm_cni_plugin != 'none'
+    - _cni_ds_check.rc != 0
+
+- name: Apply CNI manifest (only if not already installed)
+  ansible.builtin.command:
+    cmd: "{{ kubeadm_kubectl_cmd }} apply -f /tmp/cni-manifest.yaml"
+  register: _cni_apply
+  changed_when: "'created' in _cni_apply.stdout or 'configured' in _cni_apply.stdout"
+  when:
+    - kubeadm_is_bootstrap | bool
+    - kubeadm_cni_plugin != 'none'
+    - _cni_ds_check.rc != 0
+
+- name: Remove temporary CNI manifest from remote host
+  ansible.builtin.file:
+    path: /tmp/cni-manifest.yaml
+    state: absent
+  when:
+    - kubeadm_is_bootstrap | bool
+    - kubeadm_cni_plugin != 'none'
+
+- name: Wait for CNI DaemonSet to be ready
+  ansible.builtin.command:
+    cmd: "{{ kubeadm_kubectl_cmd }} rollout status daemonset/{{ kubeadm_cni_daemonsets[kubeadm_cni_plugin] }} -n kube-system --timeout=300s"
+  register: _cni_rollout
+  changed_when: false
+  failed_when: _cni_rollout.rc != 0
+  when:
+    - kubeadm_is_bootstrap | bool
+    - kubeadm_cni_plugin != 'none'
+
+- name: Wait for all nodes to be Ready (confirms CNI is functional)
+  ansible.builtin.command:
+    cmd: "{{ kubeadm_kubectl_cmd }} wait --for=condition=Ready nodes --all --timeout=120s"
+  register: _nodes_ready
+  changed_when: false
+  failed_when: _nodes_ready.rc != 0
+  when: kubeadm_is_bootstrap | bool

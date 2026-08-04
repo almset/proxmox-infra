@@ -1,0 +1,24 @@
+---
+- name: Check supported OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Debian"
+    fail_msg: "This role supports only Debian-based systems"
+    success_msg: "OS family check passed"
+
+- name: Check supported distribution
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_major_version | int >= 22
+    fail_msg: "This role supports only Ubuntu 22.04+"
+    success_msg: "Distribution check passed"
+
+#- name: Warn about SSH access
+#  ansible.builtin.debug:
+#    msg: >
+#      WARNING: UFW will be enabled with default policy '{{ firewall_ufw_default_input }}'.
+#      Ensure SSH (port {{ firewall_ufw_ssh_port }}) is allowed, otherwise you may lose access.
+#  when:
+#    - firewall_ufw_default_input == "deny"
+#    - not (firewall_ufw_ssh_enabled | bool)

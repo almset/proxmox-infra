@@ -1,0 +1,54 @@
+---
+- name: Check if RKE2 binary exists
+  ansible.builtin.stat:
+    path: /var/lib/rancher/rke2/bin/rke2
+  register: _rke2_bin_stat
+
+- name: Get installed RKE2 version
+  ansible.builtin.command:
+    cmd: /var/lib/rancher/rke2/bin/rke2 --version
+  register: _rke2_installed_version
+  changed_when: false
+  failed_when: false
+  when: _rke2_bin_stat.stat.exists
+
+- name: Extract installed version string
+  ansible.builtin.set_fact:
+    _installed_rke2_version: "{{ _rke2_installed_version.stdout | regex_search('v\\d+\\.\\d+\\.\\d+\\+rke2r\\d+') }}"
+  when: _rke2_bin_stat.stat.exists
+
+- name: Determine if RKE2 installation is needed
+  ansible.builtin.set_fact:
+    _rke2_needs_install: >-
+      {{
+        not _rke2_bin_stat.stat.exists or
+        (rke2_version | length > 0 and rke2_version != (_installed_rke2_version | default('')))
+      }}
+
+- name: Download RKE2 install script
+  ansible.builtin.get_url:
+    url: "{{ rke2_install_script_url }}"
+    dest: /tmp/rke2-install.sh
+    mode: '0700'
+    force: true
+  when: _rke2_needs_install | bool
+
+- name: Execute RKE2 install script
+  ansible.builtin.command:
+    cmd: /tmp/rke2-install.sh
+  environment: >-
+    {{
+      {'INSTALL_RKE2_TYPE': rke2_type}
+      | combine(rke2_version | length > 0 | ternary({'INSTALL_RKE2_VERSION': rke2_version}, {}))
+      | combine(rke2_version | length == 0 | ternary({'INSTALL_RKE2_CHANNEL': rke2_channel}, {}))
+      | combine(rke2_install_artifact_path | length > 0 | ternary({'INSTALL_RKE2_ARTIFACT_PATH': rke2_install_artifact_path}, {}))
+      | combine(rke2_install_method | length > 0 | ternary({'INSTALL_RKE2_METHOD': rke2_install_method}, {}))
+    }}
+  register: _rke2_install_result
+  changed_when: _rke2_install_result.rc == 0
+  when: _rke2_needs_install | bool
+
+- name: Clean up install script
+  ansible.builtin.file:
+    path: /tmp/rke2-install.sh
+    state: absent

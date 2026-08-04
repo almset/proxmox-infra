@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  role_name: fail2ban
+  author: your_name
+  description: Install and configure fail2ban with safe cleanup
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - security
+    - fail2ban
+    - hardening
+    - firewall
+
+dependencies: []

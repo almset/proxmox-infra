@@ -1,0 +1,14 @@
+---
+- name: Enable IPv4 forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: yes
+
+- name: Enable forwarding on all interfaces
+  ansible.posix.sysctl:
+    name: net.ipv4.conf.all.forwarding
+    value: "1"
+    state: present
+    reload: yes

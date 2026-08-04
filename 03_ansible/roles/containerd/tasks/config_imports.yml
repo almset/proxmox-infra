@@ -1,0 +1,31 @@
+---
+- name: Read main config after generation
+  ansible.builtin.slurp:
+    src: "{{ containerd_config_dir }}/config.toml"
+  register: _main_config_after
+
+- name: Check if imports directive exists as an array in config
+  ansible.builtin.set_fact:
+    _has_imports: "{{ (_main_config_after.content | b64decode) is search('(?m)^imports\\s*=\\s*\\[') }}"
+
+- name: Add imports directive if missing (required for conf.d drop-ins)
+  ansible.builtin.lineinfile:
+    path: "{{ containerd_config_dir }}/config.toml"
+    line: "imports = ['/etc/containerd/conf.d/*.toml']"
+    insertafter: '^version\s*='
+    mode: '0644'
+  when: not _has_imports
+  notify: Restart containerd
+
+- name: Create conf.d directory for drop-in overrides
+  ansible.builtin.file:
+    path: "{{ containerd_config_dir }}/conf.d"
+    state: directory
+    mode: '0755'
+
+- name: Deploy Kubernetes-specific drop-in configuration
+  ansible.builtin.template:
+    src: conf.d/99-kubernetes.toml.j2
+    dest: "{{ containerd_config_dir }}/conf.d/99-kubernetes.toml"
+    mode: '0644'
+  notify: Restart containerd

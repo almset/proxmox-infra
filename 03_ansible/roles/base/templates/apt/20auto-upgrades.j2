@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# Managed by Ansible - base role
+
+APT::Periodic::Update-Package-Lists "{{ base_apt_update_package_lists_interval }}";
+APT::Periodic::Unattended-Upgrade "{{ base_apt_unattended_upgrade_interval }}";
+{% if not (base_unattended_upgrades_enabled | bool) %}
+APT::Periodic::Download-Upgradeable-Packages "0";
+APT::Periodic::AutocleanInterval "0";
+{% endif %}

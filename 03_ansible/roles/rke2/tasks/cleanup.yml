@@ -1,0 +1,16 @@
+---
+- name: Remove conflicting packages
+  ansible.builtin.apt:
+    name: "{{ rke2_cleanup_packages }}"
+    state: absent
+    purge: true
+    autoremove: "{{ rke2_cleanup_autoremove | bool }}"
+  when: rke2_cleanup | bool
+
+- name: Execute full RKE2 uninstall script
+  ansible.builtin.command:
+    cmd: /usr/local/bin/rke2-uninstall.sh
+  register: _uninstall_result
+  changed_when: _uninstall_result.rc == 0
+  failed_when: false
+  when: rke2_cleanup_full | bool

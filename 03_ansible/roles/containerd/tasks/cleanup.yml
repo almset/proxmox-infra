@@ -1,0 +1,8 @@
+---
+- name: Remove conflicting packages (if explicitly enabled)
+  ansible.builtin.apt:
+    name: "{{ containerd_cleanup_packages }}"
+    state: absent
+    purge: true
+    autoremove: "{{ containerd_cleanup_autoremove | bool }}"
+  when: containerd_cleanup | bool

@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# Extra jail: {{ item.name }}
+
+[{{ item.name }}]
+enabled  = {{ item.enabled | default(true) | bool | lower }}
+port     = {{ item.port | default('http,https') }}
+filter   = {{ item.filter | default(item.name) }}
+{% if fail2ban_default.backend != 'systemd' %}
+logpath  = {{ item.logpath }}
+{% endif %}
+maxretry = {{ item.maxretry | default(5) }}
+bantime  = {{ item.bantime | default(3600) }}
+findtime = {{ item.findtime | default(600) }}
+{% if item.action is defined %}
+action   = {{ item.action }}
+{% endif %}

@@ -1,0 +1,22 @@
+---
+# Состояние конфигурации: 'present' (настроить) или 'absent' (удалить)
+resolver_state: present
+
+# Адаптер для настройки
+resolver_target_interface: "eth0"
+
+# Список IPv4/IPv6 адресов DNS-серверов
+resolver_nameservers:
+  - "192.168.100.7"
+#  - "192.168.100.53"
+
+# Список доменов поиска DNS
+resolver_search_domains:
+  - "local.lab"
+#  - "corp.local"
+
+# Хост для проверки работы DNS (должен гарантированно существовать в локальной сети)
+resolver_dns_verification_host: "dns-server.local.lab"
+
+# Проверять ли разрешение внешних имен (отключено по умолчанию из-за возможных ограничений сети)
+resolver_verify_external: false

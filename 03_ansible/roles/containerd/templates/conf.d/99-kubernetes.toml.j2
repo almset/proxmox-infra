@@ -1,0 +1,9 @@
+# Managed by Ansible - containerd role
+# Drop-in override for Kubernetes-specific settings (containerd 2.2+ compatible)
+# This file is merged with the main config.toml via the imports directive.
+
+[plugins.'io.containerd.cri.v1.images'.pinned_images]
+  sandbox = "{{ containerd_sandbox_image }}"
+
+[plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options]
+  SystemdCgroup = {{ containerd_systemd_cgroup | string | lower }}

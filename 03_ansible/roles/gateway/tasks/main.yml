@@ -1,0 +1,41 @@
+---
+- name: Preflight checks and validation
+  ansible.builtin.import_tasks: preflight.yml
+  tags: ['always', 'gateway-preflight']
+
+- name: Install required packages
+  ansible.builtin.import_tasks: install.yml
+  when:
+    - gateway_enabled | bool
+    - gateway_install_persistent | bool
+  tags: ['gateway-install']
+
+- name: Configure IP forwarding
+  ansible.builtin.import_tasks: forwarding.yml
+  when:
+    - gateway_enabled | bool
+    - gateway_manage_forwarding | bool
+  tags: ['gateway-forwarding']
+
+- name: Configure iptables NAT and filtering
+  ansible.builtin.import_tasks: firewall.yml
+  when:
+    - gateway_enabled | bool
+    - gateway_manage_firewall | bool
+  tags: ['gateway-firewall']
+
+- name: Flush handlers before verification
+  ansible.builtin.meta: flush_handlers
+  when:
+    - gateway_enabled | bool
+    - gateway_manage_firewall | bool
+
+- name: Verify configuration
+  ansible.builtin.import_tasks: verify.yml
+  when: gateway_enabled | bool
+  tags: ['gateway-verify']
+
+- name: Display debug summary (manual runs only)
+  ansible.builtin.import_tasks: debug.yml
+  when: gateway_enabled | bool
+  tags: ['gateway-debug']

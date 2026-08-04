@@ -1,0 +1,10 @@
+---
+- name: Restart chrony
+  systemd:
+    name: chrony
+    state: restarted
+
+- name: Restart qemu-guest-agent
+  systemd:
+    name: qemu-guest-agent
+    state: restarted

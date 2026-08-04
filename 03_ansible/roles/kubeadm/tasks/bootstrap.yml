@@ -1,0 +1,122 @@
+---
+- name: Check if cluster is already initialized
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: _admin_conf_stat
+
+- name: Generate kubeadm configuration file
+  ansible.builtin.template:
+    src: kubeadm-config.yaml.j2
+    dest: "{{ kubeadm_config_dir }}/kubeadm-config.yaml"
+    mode: '0600'
+    owner: root
+    group: root
+  when: not _admin_conf_stat.stat.exists
+
+- name: Pre-pull Kubernetes images (speeds up init, helps with air-gap)
+  ansible.builtin.command: >-
+    kubeadm config images pull
+    --config {{ kubeadm_config_dir }}/kubeadm-config.yaml
+    --cri-socket {{ kubeadm_container_runtime_endpoint }}
+  register: _prepull
+  changed_when: "'pulled' in _prepull.stdout or _prepull.rc == 0"
+  retries: 3
+  delay: 20
+  until: _prepull.rc == 0
+  when: not _admin_conf_stat.stat.exists
+
+- name: Initialize Kubernetes cluster
+  ansible.builtin.command: >-
+    kubeadm init
+    --config {{ kubeadm_config_dir }}/kubeadm-config.yaml
+    --upload-certs
+  register: _kubeadm_init
+  changed_when: _kubeadm_init.rc == 0
+  failed_when: _kubeadm_init.rc != 0
+  when: not _admin_conf_stat.stat.exists
+
+- name: Extract certificate key from init output (for HomeLab join command only)
+  ansible.builtin.set_fact:
+    _home_lab_certificate_key: "{{ _kubeadm_init.stdout | regex_search('[a-f0-9]{64}') | default('') }}"
+  when:
+    - not _admin_conf_stat.stat.exists       # <-- ДОБАВЛЕНО: выполняем только при новой инициализации
+    - _kubeadm_init.rc is defined            # <-- ДОБАВЛЕНО: защита от undefined переменной
+    - _kubeadm_init.rc == 0                  # <-- ДОБАВЛЕНО: выполняем только если init прошел успешно
+    - kubeadm_store_join_command | bool
+
+- name: Compute CA cert hash locally (for HomeLab join command)
+  ansible.builtin.shell: >
+    openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt |
+    openssl rsa -pubin -outform der 2>/dev/null |
+    openssl dgst -sha256 -hex
+  args:
+    executable: /bin/bash
+  register: _ca_hash_cmd
+  changed_when: false
+  failed_when:
+    - _ca_hash_cmd.rc != 0
+    - _ca_hash_cmd.stdout is not search('[a-f0-9]{64}')
+  when:
+    - kubeadm_is_bootstrap | bool
+    - not _admin_conf_stat.stat.exists       # <-- ДОБАВЛЕНО
+    - kubeadm_store_join_command | bool
+
+- name: Generate initial join token during bootstrap (for HomeLab convenience)
+  ansible.builtin.command: kubeadm token create --ttl {{ kubeadm_join_token_ttl }}
+  register: _initial_token
+  changed_when: true
+  failed_when:
+    - _initial_token.rc != 0
+    - _initial_token.stdout | trim | length == 0
+  when:
+    - kubeadm_is_bootstrap | bool
+    - not _admin_conf_stat.stat.exists       # <-- ДОБАВЛЕНО
+    - kubeadm_store_join_command | bool
+
+- name: Assemble join command for HomeLab
+  ansible.builtin.set_fact:
+    kubeadm_join_command: >-
+      kubeadm join {{ kubeadm_api_endpoint | default(ansible_default_ipv4.address, true) }}:6443
+      --token {{ _initial_token.stdout | trim }}
+      --discovery-token-ca-cert-hash sha256:{{ _ca_hash_cmd.stdout | regex_search('[a-f0-9]{64}') | default('') }}
+      --certificate-key {{ _home_lab_certificate_key }}
+  when:
+    - kubeadm_is_bootstrap | bool
+    - not _admin_conf_stat.stat.exists       # <-- ДОБАВЛЕНО
+    - kubeadm_store_join_command | bool
+
+- name: Save join command to secure file on bootstrap node (HomeLab only)
+  ansible.builtin.copy:
+    content: "{{ kubeadm_join_command }}"
+    dest: /etc/kubernetes/join-command.sh
+    mode: '0600'
+    owner: root
+    group: root
+  when:
+    - kubeadm_is_bootstrap | bool
+    - kubeadm_store_join_command | bool
+    - not _admin_conf_stat.stat.exists       # <-- ДОБАВЛЕНО
+
+# ==============================================================================
+# Post-bootstrap local configuration (Developer/Admin Experience)
+# ==============================================================================
+
+- name: Configure local kubectl access for the control-plane user
+  block:
+    - name: Ensure user's .kube directory exists
+      ansible.builtin.file:
+        path: "{{ ansible_user_dir }}/.kube"
+        state: directory
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+        mode: '0700'
+
+    - name: Copy admin.conf to user's kubeconfig
+      ansible.builtin.copy:
+        src: /etc/kubernetes/admin.conf
+        dest: "{{ ansible_user_dir }}/.kube/config"
+        remote_src: true
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+        mode: '0600'
+  when: kubeadm_is_control_plane | bool

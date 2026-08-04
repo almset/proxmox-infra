@@ -1,0 +1,34 @@
+---
+- name: Verify (syntax and structure only — functional tests require VMs)
+  hosts: all
+  become: true
+  tasks:
+    - name: Check if kubeadm binary exists
+      ansible.builtin.stat:
+        path: /usr/bin/kubeadm
+      register: kubeadm_bin
+      failed_when: not kubeadm_bin.stat.exists
+
+    - name: Check if kubelet binary exists
+      ansible.builtin.stat:
+        path: /usr/bin/kubelet
+      register: kubelet_bin
+      failed_when: not kubelet_bin.stat.exists
+
+    - name: Check if kubectl binary exists
+      ansible.builtin.stat:
+        path: /usr/bin/kubectl
+      register: kubectl_bin
+      failed_when: not kubectl_bin.stat.exists
+
+    - name: Check if kubelet extra args template is rendered
+      ansible.builtin.stat:
+        path: /etc/default/kubelet
+      register: kubelet_extra_args
+      failed_when: not kubelet_extra_args.stat.exists
+
+    - name: Check if Kubernetes packages are held
+      ansible.builtin.command: apt-mark showhold
+      register: held_packages
+      changed_when: false
+      failed_when: "'kubelet' not in held_packages.stdout"

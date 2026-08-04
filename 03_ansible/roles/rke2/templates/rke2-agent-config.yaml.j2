@@ -1,0 +1,59 @@
+# Managed by Ansible - rke2 role
+token: "{{ rke2_token }}"
+server: "{{ rke2_server_url }}"
+node-name: "{{ rke2_node_name | default(ansible_hostname) }}"
+data-dir: "{{ rke2_data_dir }}"
+protect-kernel-defaults: {{ rke2_protect_kernel_defaults | lower }}
+selinux: {{ rke2_selinux | lower }}
+
+{% if rke2_node_ip | length > 0 %}
+node-ip: "{{ rke2_node_ip }}"
+{% endif %}
+
+{% if rke2_node_external_ip | length > 0 %}
+node-external-ip: "{{ rke2_node_external_ip }}"
+{% endif %}
+
+{% if rke2_resolv_conf | length > 0 %}
+resolv-conf: "{{ rke2_resolv_conf }}"
+{% endif %}
+
+{% if rke2_snapshotter | length > 0 %}
+snapshotter: "{{ rke2_snapshotter }}"
+{% endif %}
+
+{% if rke2_cloud_provider_name | length > 0 %}
+cloud-provider-name: "{{ rke2_cloud_provider_name }}"
+{% endif %}
+
+{% if rke2_disable_kube_proxy | bool %}
+disable-kube-proxy: true
+{% endif %}
+
+{% if rke2_node_labels | length > 0 %}
+node-label:
+{% for label in rke2_node_labels %}
+  - "{{ label }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_node_taints | length > 0 %}
+node-taint:
+{% for taint in rke2_node_taints %}
+  - "{{ taint }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_kubelet_args | length > 0 %}
+kubelet-arg:
+{% for arg in rke2_kubelet_args %}
+  - "{{ arg }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_kubelet_extra_env | length > 0 %}
+kubelet-extra-env:
+{% for key, value in rke2_kubelet_extra_env.items() %}
+  - "{{ key }}={{ value }}"
+{% endfor %}
+{% endif %}

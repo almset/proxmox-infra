@@ -1,0 +1,44 @@
+---
+# ============================================================
+# SSH port range
+# ============================================================
+- name: Validate SSH port range
+  ansible.builtin.assert:
+    that:
+      - firewall_ufw_ssh_port | int >= 1
+      - firewall_ufw_ssh_port | int <= 65535
+    fail_msg: "SSH port must be between 1 and 65535, got: {{ firewall_ufw_ssh_port }}"
+    quiet: true
+
+# ============================================================
+# Extra rules — port XOR from_ip (cannot be both at the same time)
+# ============================================================
+- name: Validate extra rules have either port or from_ip (not both)
+  ansible.builtin.assert:
+    that:
+      - (item.port is defined) or (item.from_ip is defined and item.to_port is defined)
+      - not (item.port is defined and item.from_ip is defined)
+    fail_msg: >
+      Extra rule {{ item }} is invalid.
+      Must have EITHER 'port' OR both 'from_ip' and 'to_port' (not both).
+    quiet: true
+  loop: "{{ firewall_rules }}"
+  loop_control:
+    label: "{{ item.rule | default('unknown') }} {{ item.port | default(item.to_port | default('')) }}"
+  when: firewall_rules | length > 0
+
+# ============================================================
+# Extra rules — proto must be tcp or udp
+# ============================================================
+- name: Validate proto in extra rules
+  ansible.builtin.assert:
+    that:
+      - item.proto | default('tcp') in ['tcp', 'udp']
+    fail_msg: >
+      Extra rule {{ item }} has invalid proto '{{ item.proto | default('tcp') }}'.
+      Must be 'tcp' or 'udp'.
+    quiet: true
+  loop: "{{ firewall_rules }}"
+  loop_control:
+    label: "{{ item.rule | default('unknown') }} {{ item.port | default(item.to_port | default('')) }}"
+  when: firewall_rules | length > 0

@@ -1,0 +1,41 @@
+---
+- name: Preflight checks
+  ansible.builtin.import_tasks: preflight.yml
+  tags:
+    - dns
+    - dns_preflight
+
+- name: Install BIND9
+  ansible.builtin.import_tasks: install.yml
+  tags:
+    - dns
+    - dns_install
+
+- name: Configure BIND9
+  ansible.builtin.import_tasks: configure.yml
+  tags:
+    - dns
+    - dns_config
+
+- name: Configure DNS zones
+  ansible.builtin.import_tasks: zones.yml
+  tags:
+    - dns
+    - dns_zones
+
+- name: Ensure BIND9 service state
+  ansible.builtin.import_tasks: service.yml
+  tags:
+    - dns
+    - dns_service
+
+- name: Flush handlers to apply configuration changes
+  ansible.builtin.meta: flush_handlers
+  tags:
+    - dns
+
+- name: Validate DNS operation
+  ansible.builtin.import_tasks: validate.yml
+  tags:
+    - dns
+    - dns_validate

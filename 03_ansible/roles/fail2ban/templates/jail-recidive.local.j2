@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# Recidive jail - bans persistent offenders for longer periods
+
+[recidive]
+enabled  = {{ fail2ban_recidive.enabled | bool | lower }}
+banaction = {{ fail2ban_recidive.banaction }}
+filter   = recidive
+{% if fail2ban_default.backend != 'systemd' %}
+logpath  = {{ fail2ban_recidive.logpath }}
+{% endif %}
+maxretry = {{ fail2ban_recidive.maxretry }}
+bantime  = {{ fail2ban_recidive.bantime }}
+findtime = {{ fail2ban_recidive.findtime }}

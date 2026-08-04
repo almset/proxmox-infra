@@ -1,0 +1,22 @@
+---
+- name: Verify Single Server Topology
+  hosts: all
+  become: true
+  tasks:
+    - name: Assert RKE2 binary exists
+      ansible.builtin.stat:
+        path: /var/lib/rancher/rke2/bin/rke2
+      register: rke2_bin
+      failed_when: not rke2_bin.stat.exists
+
+    - name: Assert config.yaml has strict permissions (0600)
+      ansible.builtin.stat:
+        path: /etc/rancher/rke2/config.yaml
+      register: rke2_config
+      failed_when: rke2_config.stat.mode != '0600'
+
+    - name: Assert rke2-server service is active
+      ansible.builtin.systemd:
+        name: rke2-server
+      register: rke2_svc
+      failed_when: rke2_svc.status.ActiveState != 'active'

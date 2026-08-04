@@ -1,0 +1,10 @@
+---
+- name: Configure sysctl security parameters via template
+  ansible.builtin.template:
+    src: sysctl-hardening.conf.j2
+    dest: /etc/sysctl.d/50-hardening.conf
+    owner: root
+    group: root
+    mode: '0644'
+  when: hardening_manage_sysctl | bool
+  notify: Reload sysctl

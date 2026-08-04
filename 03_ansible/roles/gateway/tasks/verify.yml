@@ -1,0 +1,8 @@
+---
+- name: Verify rules file and service state
+  ansible.builtin.import_tasks: verify_file.yml
+  when: gateway_manage_firewall | bool
+
+- name: Verify runtime iptables state
+  ansible.builtin.import_tasks: verify_runtime.yml
+  when: gateway_manage_firewall | bool

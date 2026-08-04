@@ -1,0 +1,182 @@
+---
+- name: Resolve bootstrap host for drain/uncordon operations
+  ansible.builtin.set_fact:
+    _upgrade_cp_host: "{{ kubeadm_bootstrap_host | default(groups[kubeadm_control_plane_group_name] | first, true) }}"
+
+- name: Validate serial execution for control-plane upgrades
+  ansible.builtin.assert:
+    that: ansible_play_batch | length == 1
+    fail_msg: "DANGER: Control-plane upgrades MUST be executed with 'serial: 1'."
+    quiet: true
+  when: kubeadm_is_control_plane | bool
+
+- name: Get current kubeadm version
+  ansible.builtin.command: kubeadm version -o short
+  register: _kubeadm_version
+  changed_when: false
+  failed_when: false
+
+- name: Get current kubelet version
+  ansible.builtin.command: kubelet --version
+  register: _kubelet_version
+  changed_when: false
+  failed_when: false
+
+- name: Get current kubectl client version
+  ansible.builtin.command: kubectl version --client -o json
+  register: _kubectl_version_json
+  changed_when: false
+  failed_when: false
+
+- name: Set fact if upgrade is needed (any component lags behind target)
+  ansible.builtin.set_fact:
+    kubeadm_needs_upgrade: >-
+      {{
+        ('v' + kubernetes_version) not in _kubeadm_version.stdout or
+        ('v' + kubernetes_version) not in _kubelet_version.stdout or
+        ('v' + kubernetes_version) not in ((_kubectl_version_json.stdout | from_json).clientVersion.gitVersion)
+      }}
+
+- name: Validate Kubernetes version skew (max +1 minor version)
+  block:
+    - name: Extract current and target versions robustly
+      ansible.builtin.set_fact:
+        _current_major: "{{ _kubeadm_version.stdout | regex_replace('^.*v([0-9]+)\\..*$', '\\1') | int }}"
+        _current_minor: "{{ _kubeadm_version.stdout | regex_replace('^.*v[0-9]+\\.([0-9]+).*$', '\\1') | int }}"
+        _target_major: "{{ kubernetes_version | regex_replace('^v?([0-9]+)\\..*', '\\1') | int }}"
+        _target_minor: "{{ kubernetes_version | regex_replace('^v?[0-9]+\\.([0-9]+).*', '\\1') | int }}"
+
+    - name: Assert version skew policy
+      ansible.builtin.assert:
+        that:
+          - _target_major == _current_major
+          - _target_minor <= _current_minor + 1
+        fail_msg: "Version skew violation: Cannot upgrade to v{{ kubernetes_version }}. Max allowed jump is +1 minor version."
+        quiet: true
+  when: kubeadm_needs_upgrade | bool
+
+- name: Upgrade control-plane node
+  block:
+    - name: Drain control-plane node (local kubectl, admin.conf exists)
+      ansible.builtin.command: >-
+        {{ kubeadm_kubectl_cmd }} drain {{ kubeadm_node_name | default(ansible_hostname) }}
+        --ignore-daemonsets --delete-emptydir-data --force
+      register: _drain
+      changed_when: _drain.rc == 0
+
+    - name: Unhold Kubernetes packages to allow upgrade
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: install
+      loop: [kubelet, kubeadm, kubectl]
+
+    - name: Upgrade kubeadm package FIRST
+      ansible.builtin.apt:
+        name: "kubeadm={{ kubernetes_version }}-*"
+        state: present
+        update_cache: true
+
+    - name: Run kubeadm upgrade plan (validation step)
+      ansible.builtin.command: kubeadm upgrade plan v{{ kubernetes_version }}
+      register: _upgrade_plan
+      changed_when: false
+      failed_when: _upgrade_plan.rc != 0
+
+    - name: Apply kubeadm upgrade
+      ansible.builtin.command: kubeadm upgrade apply v{{ kubernetes_version }} -y
+      register: _upgrade
+      changed_when: _upgrade.rc == 0
+
+    - name: Upgrade kubelet and kubectl packages
+      ansible.builtin.apt:
+        name:
+          - "kubelet={{ kubernetes_version }}-*"
+          - "kubectl={{ kubernetes_version }}-*"
+        state: present
+        update_cache: true
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Restart kubelet explicitly
+      ansible.builtin.systemd:
+        name: kubelet
+        state: restarted
+
+    - name: Hold Kubernetes packages at current version
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop: [kubelet, kubeadm, kubectl]
+
+  always:
+    - name: Uncordon control-plane node (guaranteed execution)
+      ansible.builtin.command: >-
+        {{ kubeadm_kubectl_cmd }} uncordon {{ kubeadm_node_name | default(ansible_hostname) }}
+      register: _uncordon
+      changed_when: _uncordon.rc == 0
+      failed_when: false
+  when: kubeadm_is_control_plane | bool and kubeadm_needs_upgrade | bool
+
+- name: Upgrade worker node
+  block:
+    - name: Drain worker node (delegate to control-plane — worker has no admin.conf)
+      ansible.builtin.command: >-
+        kubectl --kubeconfig {{ kubeadm_kubeconfig_path }}
+        drain {{ kubeadm_node_name | default(ansible_hostname) }}
+        --ignore-daemonsets --delete-emptydir-data --force
+      delegate_to: "{{ _upgrade_cp_host }}"
+      register: _drain_worker
+      changed_when: _drain_worker.rc == 0
+
+    - name: Unhold Kubernetes packages to allow upgrade
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: install
+      loop: [kubelet, kubeadm, kubectl]
+
+    - name: Upgrade kubeadm package FIRST
+      ansible.builtin.apt:
+        name: "kubeadm={{ kubernetes_version }}-*"
+        state: present
+        update_cache: true
+
+    - name: Execute kubeadm upgrade node
+      ansible.builtin.command: kubeadm upgrade node
+      register: _upgrade_node
+      changed_when: _upgrade_node.rc == 0
+
+    - name: Upgrade kubelet and kubectl packages on worker
+      ansible.builtin.apt:
+        name:
+          - "kubelet={{ kubernetes_version }}-*"
+          - "kubectl={{ kubernetes_version }}-*"
+        state: present
+        update_cache: true
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Restart kubelet explicitly
+      ansible.builtin.systemd:
+        name: kubelet
+        state: restarted
+
+    - name: Hold Kubernetes packages at current version
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop: [kubelet, kubeadm, kubectl]
+
+  always:
+    - name: Uncordon worker node (delegate to control-plane — guaranteed execution)
+      ansible.builtin.command: >-
+        kubectl --kubeconfig {{ kubeadm_kubeconfig_path }}
+        uncordon {{ kubeadm_node_name | default(ansible_hostname) }}
+      delegate_to: "{{ _upgrade_cp_host }}"
+      register: _uncordon_worker
+      changed_when: _uncordon_worker.rc == 0
+      failed_when: false
+  when: kubeadm_is_worker | bool and kubeadm_needs_upgrade | bool

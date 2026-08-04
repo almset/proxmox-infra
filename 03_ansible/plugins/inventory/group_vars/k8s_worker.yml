@@ -1,0 +1,51 @@
+---
+# Роль ноды
+rke2_type: agent
+
+# Имя ноды в Kubernetes
+rke2_node_name: "{{ inventory_hostname }}"
+
+# Токен кластера (такой же, как у мастера)
+#rke2_token: "{{ vault_rke2_token }}"
+
+# Адрес мастера для присоединения (укажите IP или DNS первого мастера)
+rke2_server_url: "https://192.168.100.20:9345"  # <-- Замените на реальный IP мастера
+
+# Токен
+rke2_token: "f603132773c1f9e9d4c8cb3033ca0d774309d2b6ee4462a36de7196379afded3"
+
+# Firewall
+firewall_enabled: true
+firewall_rules:
+
+- rule: allow
+  port: 6443
+  proto: tcp
+
+- rule: allow
+  port: 9345
+  proto: tcp
+
+- rule: allow
+  port: 10250
+  proto: tcp
+
+- rule: allow
+  port: 2379:2380
+  proto: tcp
+
+- rule: allow
+  port: 30000:32767
+  proto: tcp
+
+#- rule: allow
+#  port: 4789
+#  proto: udp
+#
+- rule: allow
+  port: 5473
+  proto: udp
+
+
+
+

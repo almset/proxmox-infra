@@ -1,0 +1,30 @@
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../../../collections/requirements.yml
+
+driver:
+  name: vagrant
+  provider:
+    name: libvirt
+
+platforms:
+  - name: gateway-broken-ubuntu-2204
+    box: generic/ubuntu2204
+    memory: 1024
+    cpus: 2
+
+provisioner:
+  name: ansible
+  lint:
+    name: ansible-lint
+  inventory:
+    host_vars:
+      gateway-broken-ubuntu-2204:
+        gateway_external_interface: "eth0"
+        gateway_internal_interface: "eth1"
+
+verifier:
+  name: testinfra
+  directory: verify/

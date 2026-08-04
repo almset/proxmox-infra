@@ -1,0 +1,21 @@
+---
+- name: Gather distribution facts
+  ansible.builtin.setup:
+    filter:
+      - "ansible_distribution*"
+
+- name: Verify supported operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_version is version('22.04', '>=')
+    fail_msg: >
+      Роль resolver поддерживает только Ubuntu >= 22.04.
+      Обнаружена система: {{ ansible_distribution }} {{ ansible_distribution_version }}.
+    success_msg: "ОС поддерживается: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+- name: Validate netplan installation and current configuration
+  ansible.builtin.command: netplan generate
+  register: netplan_generate_preflight
+  changed_when: false
+  failed_when: netplan_generate_preflight.rc != 0

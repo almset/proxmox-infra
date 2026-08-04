@@ -1,0 +1,135 @@
+---
+- name: Check containerd service state
+  ansible.builtin.systemd:
+    name: containerd
+  register: _containerd_svc
+  failed_when: _containerd_svc.status.ActiveState != 'active'
+
+- name: Check containerd version (min 1.6.0 required)
+  ansible.builtin.command: containerd --version
+  register: _containerd_version
+  changed_when: false
+  vars:
+    _c_version: "{{ _containerd_version.stdout | regex_replace('^.*v([0-9.]+).*$', '\\1') }}"
+  failed_when: _c_version is version('1.6.0', '<')
+
+- name: Configure crictl to use containerd explicitly (suppresses warnings and speeds up execution)
+  ansible.builtin.copy:
+    dest: /etc/crictl.yaml
+    mode: '0644'
+    content: |
+      runtime-endpoint: unix:///run/containerd/containerd.sock
+      image-endpoint: unix:///run/containerd/containerd.sock
+      timeout: 10
+      debug: false
+
+- name: Check CRI socket exists
+  ansible.builtin.stat:
+    path: "{{ kubeadm_container_runtime_endpoint | regex_replace('^unix://', '') }}"
+  register: _cri_socket
+  failed_when: not _cri_socket.stat.exists
+
+- name: Check br_netfilter kernel module
+  ansible.builtin.stat:
+    path: /sys/module/br_netfilter
+  register: _br_netfilter
+  failed_when: not _br_netfilter.stat.exists
+
+- name: Check overlay kernel module
+  ansible.builtin.stat:
+    path: /sys/module/overlay
+  register: _overlay
+  failed_when: not _overlay.stat.exists
+
+- name: Check net.ipv4.ip_forward sysctl
+  ansible.builtin.command: sysctl -n net.ipv4.ip_forward
+  register: _ip_forward
+  changed_when: false
+  failed_when: _ip_forward.stdout != '1'
+
+- name: Check net.bridge.bridge-nf-call-iptables sysctl
+  ansible.builtin.command: sysctl -n net.bridge.bridge-nf-call-iptables
+  register: _bridge_nf
+  changed_when: false
+  failed_when: _bridge_nf.stdout != '1'
+
+#- name: Check swap is disabled
+#  ansible.builtin.command: swapon --show
+#  register: _swap_check
+#  changed_when: false
+#  failed_when: _swap_check.stdout | length > 0
+- name: Check if swap is currently enabled
+  ansible.builtin.command: swapon --show
+  register: _swap_check_initial
+  changed_when: false
+  failed_when: false
+
+- name: Disable swap automatically (if requested)
+  block:
+    - name: Disable swap immediately
+      ansible.builtin.command: swapoff -a
+      changed_when: true
+
+    - name: Remove swap from /etc/fstab permanently
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+        replace: '# \1'
+
+  when: 
+    - _swap_check_initial.stdout is search('swap')
+    - kubeadm_disable_swap | bool
+
+- name: Re-check if swap is disabled (verify the fix worked)
+  ansible.builtin.command: swapon --show
+  register: _swap_check_final
+  changed_when: false
+  failed_when: false
+
+- name: Assert that swap is successfully disabled
+  ansible.builtin.assert:
+    that: _swap_check_final.stdout is not search('swap')
+    fail_msg: >
+      Swap is still enabled on this node! Kubernetes strictly requires swap to be disabled. 
+      The role attempted to disable it automatically, but it failed. 
+      Please run 'sudo swapoff -a' and remove swap entries from /etc/fstab manually.
+    quiet: true
+
+
+- name: Check if timedatectl is available
+  ansible.builtin.stat:
+    path: /usr/bin/timedatectl
+  register: _timedatectl_stat
+  failed_when: false
+
+- name: Check system time is synchronized (NTP)
+  ansible.builtin.command: timedatectl show --property=NTPSynchronized --value
+  register: _ntp_sync
+  changed_when: false
+  failed_when: _ntp_sync.stdout != 'yes'
+  when: _timedatectl_stat.stat.exists
+
+- name: Check if crictl binary exists
+  ansible.builtin.stat:
+    path: /usr/local/bin/crictl
+  register: _crictl_stat
+
+- name: Install crictl (fallback if containerd role did not install it)
+  ansible.builtin.unarchive:
+    src: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.30.0/crictl-v1.30.0-linux-amd64.tar.gz"
+    dest: /usr/local/bin
+    remote_src: yes
+    mode: '0755'
+  when: not _crictl_stat.stat.exists
+
+- name: Check containerd CRI responsiveness and runtime (JSON parse)
+  ansible.builtin.command: crictl info -o json
+  register: _crictl_info
+  changed_when: false
+  vars:
+    _crictl_json: "{{ _crictl_info.stdout | from_json }}"
+  failed_when: >
+    _crictl_info.rc != 0 or
+    (_crictl_json.status.conditions |
+     selectattr('type', 'equalto', 'RuntimeReady') |
+     map(attribute='status') | list | first) != true

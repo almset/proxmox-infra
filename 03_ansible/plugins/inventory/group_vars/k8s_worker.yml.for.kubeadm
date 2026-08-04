@@ -1,0 +1,15 @@
+# Settings for Kubeadm role
+kubeadm_role: control-plane
+kubeadm_bootstrap: true
+
+# Общие настройки для всех узлов Kubernetes
+kubeadm_control_plane_group_name: k8s_master
+kubeadm_disable_swap: true
+kubernetes_version: "1.30.2"
+kubeadm_cni_plugin: calico
+kubeadm_cni_manifest_version: "v3.28.0"
+kubeadm_pod_network_cidr: "10.244.0.0/16"
+kubeadm_service_cidr: "10.96.0.0/12"
+kubeadm_cluster_name: "kubernetes-prod"
+
+

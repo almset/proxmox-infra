@@ -1,0 +1,79 @@
+---
+# ============================================================
+# Component toggles
+# ============================================================
+hardening_manage_ssh: true
+hardening_manage_sudo: true
+hardening_manage_sysctl: true
+
+# ============================================================
+# Service names
+# ============================================================
+hardening_ssh_service_name: ssh
+
+# ============================================================
+# SSH hardening
+# ============================================================
+hardening_ssh_permit_root_login: "no"
+hardening_ssh_password_authentication: "no"
+hardening_ssh_pubkey_authentication: "yes"
+hardening_ssh_x11_forwarding: "no"
+hardening_ssh_client_alive_interval: 300
+hardening_ssh_client_alive_count_max: 3
+hardening_ssh_max_auth_tries: 4
+hardening_ssh_permit_empty_passwords: "no"
+hardening_ssh_challenge_response_authentication: "no"
+hardening_ssh_use_pam: "yes"
+hardening_ssh_use_dns: "no"
+hardening_ssh_allow_agent_forwarding: "no"
+hardening_ssh_allow_tcp_forwarding: "no"
+hardening_ssh_gateway_ports: "no"
+hardening_ssh_print_motd: "no"
+hardening_ssh_print_last_log: "yes"
+hardening_ssh_tcp_keep_alive: "yes"
+hardening_ssh_compression: "no"
+hardening_ssh_login_grace_time: "60s"
+
+# Access control lists (empty = no restriction)
+hardening_ssh_allow_users: []
+hardening_ssh_allow_groups: []
+hardening_ssh_deny_users: []
+hardening_ssh_deny_groups: []
+
+# ============================================================
+# Sudo configuration
+# ============================================================
+# Разделено на 3 файла для гибкости и идемпотентности:
+# - 10-hardening-defaults: безопасные Defaults
+# - 90-hardening-ansible: доступ для ansible-пользователя
+# - 91-hardening-admins: права для группы администраторов
+
+# Управление файлами (можно отключить любую часть)
+hardening_sudo_manage_defaults: true
+hardening_sudo_manage_ansible: true
+hardening_sudo_manage_admins: true
+
+# Ansible-пользователь (для автоматизации)
+hardening_sudo_ansible_user: "ansible"
+hardening_sudo_ansible_nopasswd: true
+
+# Группа администраторов
+hardening_sudo_group: "sudo"
+hardening_sudo_require_password: true
+
+# Defaults
+hardening_sudo_timestamp_timeout: 15
+hardening_sudo_logfile: ""
+hardening_sudo_env_reset: true
+hardening_sudo_use_pty: true
+hardening_sudo_lecture: "never"
+
+
+# ============================================================
+# Sysctl extra parameters
+# ============================================================
+# Example:
+# hardening_sysctl_extra_params:
+#   - { name: net.ipv4.ip_forward, value: 1 }
+#   - { name: net.bridge.bridge-nf-call-iptables, value: 1 }
+hardening_sysctl_extra_params: []

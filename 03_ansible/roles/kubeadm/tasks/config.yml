@@ -1,0 +1,9 @@
+---
+- name: Configure kubelet extra args via /etc/default/kubelet
+  ansible.builtin.template:
+    src: kubelet.j2
+    dest: /etc/default/kubelet
+    mode: '0644'
+    owner: root
+    group: root
+  notify: Restart kubelet

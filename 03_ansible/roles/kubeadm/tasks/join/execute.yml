@@ -1,0 +1,33 @@
+---
+- name: Generate join configuration file (all secrets passed via vars, no hostvars dependency)
+  ansible.builtin.template:
+    src: join-config.yaml.j2
+    dest: /etc/kubernetes/kubeadm-join.yaml
+    mode: '0600'
+    owner: root
+    group: root
+  vars:
+    join_token: "{{ _node_token.stdout | default('') | trim }}"
+    ca_hash: >-
+      {{
+        kubeadm_ca_cert_hash
+        if kubeadm_ca_cert_hash | length > 0
+        else (_ca_hash_cmd.stdout | regex_search('[a-f0-9]{64}') | default(''))
+      }}
+    certificate_key: "{{ _node_cert_key.stdout | default('') | regex_search('[a-f0-9]{64}') | default('') }}"
+  when: not _kubelet_conf_stat.stat.exists
+
+- name: Join node to Kubernetes cluster
+  block:
+    - name: Execute kubeadm join
+      ansible.builtin.command: kubeadm join --config /etc/kubernetes/kubeadm-join.yaml
+      register: _kubeadm_join
+      changed_when: _kubeadm_join.rc == 0
+      failed_when: _kubeadm_join.rc != 0
+
+  always:
+    - name: Remove join configuration file (contains sensitive data)
+      ansible.builtin.file:
+        path: /etc/kubernetes/kubeadm-join.yaml
+        state: absent
+      when: not _kubelet_conf_stat.stat.exists

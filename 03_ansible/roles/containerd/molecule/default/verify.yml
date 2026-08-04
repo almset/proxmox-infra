@@ -1,0 +1,45 @@
+---
+# NOTE: This role requires VM-based integration testing for full service-level validation.
+# Docker-based tests are intentionally minimal and only verify file existence and idempotency.
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Note on verification scope
+      ansible.builtin.debug:
+        msg: "Molecule verify is intentionally minimal. Systemd, socket, and kernel module checks are unreliable in Docker. Full validation requires a VM."
+
+    - name: Check config.toml exists
+      ansible.builtin.stat:
+        path: /etc/containerd/config.toml
+      register: config_file
+      failed_when: not config_file.stat.exists
+
+    - name: Check drop-in config exists
+      ansible.builtin.stat:
+        path: /etc/containerd/conf.d/99-kubernetes.toml
+      register: dropin_file
+      failed_when: not dropin_file.stat.exists
+
+    - name: Check sysctl config exists
+      ansible.builtin.stat:
+        path: /etc/sysctl.d/99-containerd.conf
+      register: sysctl_file
+      failed_when: not sysctl_file.stat.exists
+
+    - name: Check modules config exists
+      ansible.builtin.stat:
+        path: /etc/modules-load.d/containerd.conf
+      register: modules_file
+      failed_when: not modules_file.stat.exists
+
+    - name: Read config.toml to verify imports (native Ansible, no grep)
+      ansible.builtin.slurp:
+        src: /etc/containerd/config.toml
+      register: _molecule_config
+
+    - name: Assert imports directive is present as an array
+      ansible.builtin.assert:
+        that:
+          - (_molecule_config.content | b64decode) is search('(?m)^imports\\s*=\\s*\\[')
+        fail_msg: "imports directive (as an array) not found in config.toml"

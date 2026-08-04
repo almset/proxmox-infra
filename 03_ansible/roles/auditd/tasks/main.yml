@@ -1,0 +1,24 @@
+---
+- name: Auditd | Preflight
+  ansible.builtin.import_tasks: preflight.yml
+  when: auditd_enabled | bool
+  tags: [auditd, preflight]
+
+- name: Auditd | Install
+  ansible.builtin.import_tasks: install.yml
+  when: auditd_enabled | bool
+  tags: [auditd, install]
+
+- name: Auditd | Configure
+  ansible.builtin.import_tasks: configure.yml
+  when: auditd_enabled | bool
+  tags: [auditd, configure]
+
+- name: Auditd | Flush handlers
+  ansible.builtin.meta: flush_handlers
+  when: auditd_enabled | bool
+
+- name: Auditd | Validate
+  ansible.builtin.import_tasks: validate.yml
+  when: auditd_enabled | bool
+  tags: [auditd, validate]

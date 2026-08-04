@@ -1,0 +1,20 @@
+---
+- name: Deploy named.conf.options
+  ansible.builtin.template:
+    src: named.conf.options.j2
+    dest: /etc/bind/named.conf.options
+    owner: root
+    group: root
+    mode: '0644'
+    validate: 'named-checkconf %s'
+  notify: Reload bind9
+
+- name: Deploy named.conf.local
+  ansible.builtin.template:
+    src: named.conf.local.j2
+    dest: /etc/bind/named.conf.local
+    owner: root
+    group: root
+    mode: '0644'
+    validate: 'named-checkconf %s'
+  notify: Reload bind9

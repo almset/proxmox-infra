@@ -1,0 +1,20 @@
+---
+- name: Deploy forward zone file
+  ansible.builtin.template:
+    src: db.forward.j2
+    dest: "/etc/bind/db.{{ dns_domain }}"
+    owner: root
+    group: root
+    mode: '0644'
+    validate: "named-checkzone {{ dns_domain }} %s"
+  notify: Reload bind9
+
+- name: Deploy reverse zone file
+  ansible.builtin.template:
+    src: db.reverse.j2
+    dest: "/etc/bind/{{ dns_reverse_zone_file }}"
+    owner: root
+    group: root
+    mode: '0644'
+    validate: "named-checkzone {{ dns_reverse_zone }} %s"
+  notify: Reload bind9

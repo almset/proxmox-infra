@@ -1,0 +1,50 @@
+{
+  "inventory": {
+    "sensitive": false,
+    "type": [
+      "object",
+      {
+        "dc-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ],
+        "fs-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ]
+      }
+    ],
+    "value": {
+      "dc-prod-01": {
+        "ansible_host": "192.168.100.10",
+        "environment": "production",
+        "management_ip": "192.168.100.10",
+        "platform": "windows",
+        "role": "ad",
+        "vm_id": 300
+      },
+      "fs-prod-01": {
+        "ansible_host": "192.168.100.13",
+        "environment": "production",
+        "management_ip": "192.168.100.13",
+        "platform": "windows",
+        "role": "fs",
+        "vm_id": 303
+      }
+    }
+  }
+}

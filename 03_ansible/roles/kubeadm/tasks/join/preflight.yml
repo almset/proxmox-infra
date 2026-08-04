@@ -1,0 +1,20 @@
+---
+- name: Check if node is already joined
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: _kubelet_conf_stat
+
+- name: Resolve bootstrap host for operations
+  ansible.builtin.set_fact:
+    _cp_host: "{{ kubeadm_bootstrap_host | default(groups[kubeadm_control_plane_group_name] | first, true) }}"
+
+- name: Wait for Kubernetes API to be fully ready before join
+  ansible.builtin.uri:
+    url: "https://{{ kubeadm_api_endpoint | default(hostvars[_cp_host]['ansible_default_ipv4']['address'], true) }}:6443/readyz"
+    validate_certs: false
+    status_code: 200
+  register: _api_readyz
+  until: _api_readyz.status == 200
+  retries: 30
+  delay: 10
+  when: not _kubelet_conf_stat.stat.exists

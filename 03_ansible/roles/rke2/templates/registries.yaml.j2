@@ -1,0 +1,5 @@
+# Managed by Ansible - rke2 role
+# RKE2 Registry Configuration
+# Documentation: https://docs.rke2.io/install/containerd_registry_configuration
+
+{{ rke2_registries | to_nice_yaml(indent=2) }}

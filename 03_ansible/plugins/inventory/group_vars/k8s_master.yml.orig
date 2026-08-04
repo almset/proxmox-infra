@@ -1,0 +1,10 @@
+---
+rke2_api_endpoint: "192.168.100.20"
+rke2_type: server
+rke2_tls_san:
+  - "k8s-api.lab.local"
+  - "{{ ansible_default_ipv4.address }}"
+rke2_kubeconfig_export_mode: controller
+rke2_kubeconfig_dest: "~/.kube/config"
+
+rke2_token: "f603132773c1f9e9d4c8cb3033ca0d774309d2b6ee4462a36de7196379afded3"

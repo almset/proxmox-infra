@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  author: Almas
+  description: Configure BIND9 authoritative and recursive DNS server
+  license: MIT
+  min_ansible_version: "2.16"
+  
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+
+  galaxy_tags:
+    - dns
+    - bind9
+    - networking
+    - infrastructure
+
+dependencies: []

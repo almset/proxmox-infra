@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  role_name: firewall
+  author: Almas
+  description: Firewall role for Ubuntu servers (UFW)
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - firewall
+    - ufw
+    - security
+    - network
+
+dependencies: []

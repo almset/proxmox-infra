@@ -1,0 +1,20 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: delegated
+platforms:
+  - name: k8s-test-node
+    groups:
+      - k8s_control_plane
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+verifier:
+  name: ansible
+
+# NOTE: Molecule verifies only syntax and basic structure.
+# Functional testing of kubeadm requires full VM environments (Libvirt/Vagrant/Incus)
+# as Docker containers cannot run systemd, kernel modules, or full kubeadm init.

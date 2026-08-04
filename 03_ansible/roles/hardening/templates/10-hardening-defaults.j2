@@ -1,0 +1,24 @@
+# Ansible managed
+# Sudo Hardening - Security Defaults
+# File: /etc/sudoers.d/10-hardening-defaults
+
+# Timeout for sudo credentials cache (minutes)
+Defaults timestamp_timeout={{ hardening_sudo_timestamp_timeout }}
+
+{% if hardening_sudo_logfile %}
+# Log sudo actions to custom file
+Defaults logfile="{{ hardening_sudo_logfile }}"
+{% endif %}
+
+{% if hardening_sudo_env_reset %}
+# Reset environment variables for security
+Defaults env_reset
+{% endif %}
+
+{% if hardening_sudo_use_pty %}
+# Require pseudo-terminal for sudo (prevents certain attacks)
+Defaults use_pty
+{% endif %}
+
+# Sudo lecture policy
+Defaults lecture="{{ hardening_sudo_lecture }}"

@@ -1,0 +1,47 @@
+---
+- name: Configure | Deploy auditd.conf
+  ansible.builtin.template:
+    src: auditd.conf.j2
+    dest: /etc/audit/auditd.conf
+    owner: root
+    group: root
+    mode: "0640"
+    backup: true
+  become: true
+  notify: Restart auditd for config changes
+
+- name: Configure | Ensure rules.d directory exists
+  ansible.builtin.file:
+    path: /etc/audit/rules.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+
+- name: Configure | Deploy audit rules
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "/etc/audit/rules.d/{{ item.dest }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0640') }}"
+  loop: "{{ auditd_rules }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  become: true
+  notify: Reload auditd rules
+
+# === КРИТИЧЕСКИ ВАЖНЫЕ ДОБАВЛЕНИЯ ===
+
+- name: Configure | Remove stale auditd PID file (prevents exit-code 6)
+  ansible.builtin.file:
+    path: /var/run/auditd.pid
+    state: absent
+  become: true
+
+- name: Configure | Ensure auditd service is started with new config
+  ansible.builtin.systemd:
+    name: auditd
+    state: started
+  become: true

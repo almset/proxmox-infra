@@ -1,0 +1,24 @@
+---
+# Play 1: Инициализация мастера (первый rke2-server)
+- name: Bootstrap RKE2 primary server
+  hosts: k8s_master
+  become: true
+  serial: 1
+  vars:
+    rke2_type: server
+    rke2_server_url: ""  # Пустой = первый сервер
+  roles:
+    - rke2
+  tags: [master]
+
+# Play 2: Присоединение воркеров (rke2-agent)
+- name: Join RKE2 worker nodes
+  hosts: k8s_worker
+  become: true
+  vars:
+    rke2_type: agent
+    rke2_server_url: "https://{{ hostvars[groups['k8s_master'][0]]['ansible_default_ipv4']['address'] }}:9345"
+    rke2_token: "{{ hostvars[groups['k8s_master'][0]]['rke2_token'] }}"
+  roles:
+    - rke2
+  tags: [workers]

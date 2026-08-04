@@ -1,0 +1,7 @@
+---
+- name: Configure DNS Server (BIND9)
+  hosts: dns
+  become: yes
+  
+  roles:
+    - role: dns

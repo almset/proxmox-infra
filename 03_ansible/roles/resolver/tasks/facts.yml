@@ -1,0 +1,23 @@
+---
+- name: Gather minimal network facts
+  ansible.builtin.setup:
+    filter:
+      - "ansible_default_ipv4"
+      - "ansible_interfaces"
+
+- name: Determine target interface for DNS configuration
+  ansible.builtin.set_fact:
+    resolver_target_interface: "{{ resolver_target_interface | default(ansible_default_ipv4.interface) }}"
+  when: resolver_target_interface is not defined or resolver_target_interface == "eth0"
+
+#- name: Determine primary network interface safely
+#  ansible.builtin.set_fact:
+#    resolver_target_interface: "{{ ansible_default_ipv4.interface | default('') }}"
+#
+- name: Fail if interface cannot be determined
+  ansible.builtin.fail:
+    msg: >
+      Не удалось определить основной сетевой интерфейс.
+      'ansible_default_ipv4.interface' отсутствует.
+      Возможные причины: запуск в контейнере, несколько default route или отключен сбор фактов.
+  when: resolver_target_interface == ""

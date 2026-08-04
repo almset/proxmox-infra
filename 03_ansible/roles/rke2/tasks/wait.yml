@@ -1,0 +1,39 @@
+---
+- name: Wait for RKE2 server port 9345 to be open
+  ansible.builtin.wait_for:
+    port: 9345
+    host: "{{ rke2_server_url | urlsplit('hostname') if rke2_server_url | length > 0 else '127.0.0.1' }}"
+    timeout: 180
+  when: rke2_is_server | bool
+
+- name: Wait for RKE2 API port 6443 to be open
+  ansible.builtin.wait_for:
+    port: 6443
+    host: "{{ rke2_server_url | urlsplit('hostname') if rke2_server_url | length > 0 else '127.0.0.1' }}"
+    timeout: 180
+
+- name: Wait for node to reach Ready state
+  ansible.builtin.command:
+    cmd: "{{ rke2_kubectl_cmd }} wait --for=condition=Ready node {{ rke2_node_name | default(ansible_hostname) }} --timeout=300s"
+  register: _node_ready
+  changed_when: false
+  failed_when: _node_ready.rc != 0
+  when: rke2_is_server | bool
+
+- name: Wait for system components (Deployment/DaemonSet/Static-pod)
+  ansible.builtin.command: >-
+    {{ rke2_kubectl_cmd }}
+    {% if item.value.kind == 'deployment' %}
+    rollout status deployment -l {{ item.value.selector }} -n {{ item.value.namespace }} --timeout=300s
+    {% elif item.value.kind == 'daemonset' %}
+    rollout status daemonset -l {{ item.value.selector }} -n {{ item.value.namespace }} --timeout=300s
+    {% elif item.value.kind == 'static-pod' %}
+    wait --for=condition=Ready pods -l {{ item.value.selector }} -n {{ item.value.namespace }} --timeout=300s
+    {% endif %}
+  register: _component_wait
+  changed_when: false
+  failed_when: _component_wait.rc != 0
+  loop: "{{ rke2_wait_components | dict2items }}"
+  when:
+    - rke2_is_server | bool
+    - item.key not in rke2_disable

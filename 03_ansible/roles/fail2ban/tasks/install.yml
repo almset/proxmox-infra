@@ -1,0 +1,10 @@
+---
+- name: Install fail2ban packages
+  ansible.builtin.apt:
+    name: "{{ fail2ban_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  tags:
+    - fail2ban
+    - fail2ban_install

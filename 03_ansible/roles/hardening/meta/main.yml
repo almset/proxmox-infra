@@ -1,0 +1,25 @@
+---
+galaxy_info:
+  role_name: hardening
+  author: Infrastructure Team
+  description: Security hardening role for Ubuntu servers (SSH, sudo, sysctl)
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - hardening
+    - security
+    - ssh
+    - sudo
+    - sysctl
+    - cis
+    - ubuntu
+    - jammy
+    - noble
+    - linux
+
+dependencies: []

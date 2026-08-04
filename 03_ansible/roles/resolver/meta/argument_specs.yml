@@ -1,0 +1,30 @@
+---
+argument_specs:
+  main:
+    short_description: Управление DNS-клиентом через Netplan drop-in конфигурацию
+    options:
+      resolver_state:
+        type: str
+        choices:
+          - present
+          - absent
+        default: present
+        description: Состояние конфигурации резолвера
+      resolver_nameservers:
+        type: list
+        elements: str
+        required: true
+        description: Список IPv4/IPv6 адресов DNS-серверов
+      resolver_search_domains:
+        type: list
+        elements: str
+        required: true
+        description: Список доменов поиска DNS
+      resolver_dns_verification_host:
+        type: str
+        required: true
+        description: Хост для проверки работы DNS
+      resolver_verify_external:
+        type: bool
+        default: false
+        description: Проверять ли разрешение внешних имен

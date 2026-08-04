@@ -1,0 +1,89 @@
+---
+# ============================
+# Feature flags (Единый стиль)
+# ============================
+# Enable/disable optional role components
+base_packages_enabled: true
+base_chrony_enabled: true
+base_qemu_enabled: true
+base_sysctl_enabled: true
+base_motd_enabled: false
+
+# ============================
+# Bootstrap
+# ============================
+base_bootstrap_python: false
+
+# ============================
+# Packages
+# ============================
+base_packages:
+  - vim
+  - curl
+  - wget
+  - git
+  - zip
+  - ncdu
+  - unzip
+  - jq
+  - htop
+  - tree
+  - bash-completion
+  - ca-certificates
+  - software-properties-common
+  - apt-transport-https
+  - gnupg
+  - rsync
+  - lsof
+  - tcpdump
+  - net-tools
+  - iproute2
+  - dnsutils
+  - traceroute
+
+# ============================
+# Time & Locale (example Asia/Almaty or Europe/London)
+# ============================
+base_timezone: "UTC"
+base_locale: "en_US.UTF-8"
+base_ntp_servers:
+  - pool.ntp.org
+  - time.cloudflare.com
+
+# ============================
+# Preflight
+# ============================
+base_preflight_enabled: false   # Master switch (Главный выключатель)
+base_check_dns: true            # DNS connectivity check
+base_check_internet: true       # Internet connectivity check
+
+base_dns_test_host: archive.ubuntu.com
+base_internet_test_host: archive.ubuntu.com
+base_internet_test_port: 80
+
+# ============================
+# Sysctl
+# ============================
+base_sysctl_settings:
+  vm.swappiness: 10
+  fs.file-max: 2097152
+  net.core.somaxconn: 65535
+
+# ============================
+# MOTD
+# ============================
+base_motd_environment: "Unknown"
+base_motd_role: "Unknown"
+
+# ============================
+# Unattended Upgrades
+# ============================
+# Управление автоматическими обновлениями. 
+# Для production Kubernetes-кластеров рекомендуется base_unattended_upgrades_enabled: false
+base_manage_unattended_upgrades: true
+base_unattended_upgrades_enabled: false
+
+# Интервалы обновления списков пакетов и установки обновлений (в днях). 
+# 0 = отключено, 1 = ежедневно, 7 = еженедельно.
+base_apt_update_package_lists_interval: 1
+base_apt_unattended_upgrade_interval: 0

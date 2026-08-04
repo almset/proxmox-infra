@@ -1,0 +1,13 @@
+---
+- name: Converge Single Server
+  hosts: all
+  become: true
+  vars:
+    rke2_type: server
+    rke2_token: "molecule-single-test-token-123"
+    rke2_disable:
+      - rke2-ingress-nginx
+      - rke2-metrics-server
+    rke2_kubeconfig_export_mode: node_only
+  roles:
+    - role: rke2

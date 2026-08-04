@@ -1,0 +1,76 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    # --- Packages ---
+    - name: Verify | Gather package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Verify | Assert auditd package is installed
+      ansible.builtin.assert:
+        that:
+          - "'auditd' in ansible_facts.packages or 'audit' in ansible_facts.packages"
+        fail_msg: "Neither 'auditd' nor 'audit' package found."
+
+    # --- Service ---
+    - name: Verify | Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Verify | Assert auditd service is running
+      ansible.builtin.assert:
+        that:
+          - >-
+            (ansible_facts.services['auditd.service']
+             | default(ansible_facts.services['auditd'])).state == 'running'
+          - >-
+            (ansible_facts.services['auditd.service']
+             | default(ansible_facts.services['auditd'])).status == 'enabled'
+
+    # --- Configuration files ---
+    - name: Verify | Check auditd.conf
+      ansible.builtin.stat:
+        path: /etc/audit/auditd.conf
+      register: _conf
+
+    - name: Verify | Assert auditd.conf exists with correct mode
+      ansible.builtin.assert:
+        that:
+          - _conf.stat.exists
+          - _conf.stat.mode == '0640'
+
+    - name: Verify | Check rules.d directory
+      ansible.builtin.stat:
+        path: /etc/audit/rules.d
+      register: _rules_dir
+
+    - name: Verify | Assert rules.d is a directory
+      ansible.builtin.assert:
+        that:
+          - _rules_dir.stat.exists
+          - _rules_dir.stat.isdir
+
+    - name: Verify | Check base rules file
+      ansible.builtin.stat:
+        path: /etc/audit/rules.d/10-base.rules
+      register: _base_rules
+
+    - name: Verify | Assert base rules file exists
+      ansible.builtin.assert:
+        that:
+          - _base_rules.stat.exists
+
+    # --- Daemon (may fail inside containers) ---
+    - name: Verify | Query auditctl status
+      ansible.builtin.command: auditctl -s
+      register: _auditctl
+      changed_when: false
+      failed_when: false
+
+    - name: Verify | Assert daemon is operational
+      ansible.builtin.assert:
+        that:
+          - _auditctl.rc == 0
+          - _auditctl.stdout is search('enabled\s+[12]')
+      when: _auditctl.rc == 0

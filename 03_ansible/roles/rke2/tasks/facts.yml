@@ -1,0 +1,11 @@
+---
+- name: Compute RKE2 node facts
+  ansible.builtin.set_fact:
+    rke2_is_primary: "{{ rke2_type == 'server' and rke2_server_url == '' }}"
+    rke2_is_join_server: "{{ rke2_type == 'server' and rke2_server_url != '' }}"
+    rke2_is_server: "{{ rke2_type == 'server' }}"
+    rke2_is_agent: "{{ rke2_type == 'agent' }}"
+    rke2_service_name: "{{ 'rke2-server' if rke2_type == 'server' else 'rke2-agent' }}"
+    rke2_kubeconfig_path: "/etc/rancher/rke2/rke2.yaml"
+    rke2_kubectl_cmd: "{{ rke2_data_dir }}/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml"
+    rke2_resolved_api_endpoint: "{{ rke2_api_endpoint | default(ansible_default_ipv4.address, true) }}"

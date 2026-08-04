@@ -1,0 +1,87 @@
+---
+argument_specs:
+  main:
+    short_description: Production-ready containerd 2.2+ installation for Kubernetes
+    description:
+      - Install containerd.io 2.2+ via APT (Docker repository)
+      - Configure via drop-in overrides (conf.d) for maximum stability
+      - Optional kernel modules and sysctl configuration
+      - Setup registry mirrors (Containerd 2.x format)
+    options:
+      containerd_cleanup:
+        type: bool
+        default: false
+        description: If true, removes packages listed in containerd_cleanup_packages.
+      containerd_cleanup_packages:
+        type: list
+        elements: str
+        default: [docker.io, docker, docker-ce, containerd]
+        description: Packages to remove if cleanup is enabled (excludes target package containerd.io).
+      containerd_cleanup_autoremove:
+        type: bool
+        default: false
+        description: If true, also runs autoremove to remove orphaned dependencies. Disabled by default for safety.
+      containerd_manage_repository:
+        type: bool
+        default: true
+        description: Set to false if the Docker repository is managed by another role.
+      containerd_manage_gpg_key:
+        type: bool
+        default: true
+        description: Set to false if the Docker GPG key is managed by another role.
+      containerd_manage_kernel:
+        type: bool
+        default: true
+        description: Set to false if kernel modules are managed centrally.
+      containerd_manage_sysctl:
+        type: bool
+        default: true
+        description: Set to false if sysctl parameters are managed centrally.
+      containerd_version:
+        type: str
+        default: ""
+        description: Full package version (e.g., '2.2.0-1'). Leave empty for latest 2.2+.
+      containerd_docker_gpg_checksum:
+        type: str
+        default: ""
+        description: Optional SHA256 checksum for Docker GPG key.
+      containerd_arch_map:
+        type: dict
+        description: Architecture mapping for deb822_repository.
+      containerd_repository_url:
+        type: str
+        default: "https://download.docker.com/linux/ubuntu"
+        description: Base URL for the containerd repository (useful for internal mirrors).
+      containerd_config_dir:
+        type: str
+        default: /etc/containerd
+        description: Configuration directory path.
+      containerd_systemd_cgroup:
+        type: bool
+        default: true
+        description: Enable SystemdCgroup (required for Kubernetes).
+      containerd_sandbox_image:
+        type: str
+        default: registry.k8s.io/pause:3.10.1
+        description: Sandbox (pause) image for Kubernetes pods.
+      containerd_regenerate_config:
+        type: bool
+        default: false
+        description: If true, or if legacy config is detected, regenerates main config.toml.
+      containerd_registry_mirrors:
+        type: list
+        default: []
+        elements: dict
+        description: List of registry mirrors. 'server' must be a valid hostname (with optional port), 'endpoint' must start with http:// or https://.
+      containerd_kernel_modules:
+        type: list
+        elements: str
+        default: [overlay, br_netfilter]
+        description: Kernel modules to load.
+      containerd_sysctl_params:
+        type: dict
+        default:
+          net.bridge.bridge-nf-call-iptables: 1
+          net.bridge.bridge-nf-call-ip6tables: 1
+          net.ipv4.ip_forward: 1
+        description: Sysctl parameters for containerd and Kubernetes.

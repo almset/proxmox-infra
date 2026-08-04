@@ -1,0 +1,72 @@
+---
+- name: Global BIND configuration check
+  ansible.builtin.command:
+    cmd: named-checkconf
+  register: check_conf_global
+  changed_when: false
+  failed_when: check_conf_global.rc != 0
+  tags:
+    - dns
+    - dns_validate
+
+- name: Check forward zone file syntax post-reload
+  ansible.builtin.command:
+    cmd: "named-checkzone {{ dns_domain }} /etc/bind/db.{{ dns_domain }}"
+  register: check_zone_forward
+  changed_when: false
+  failed_when: check_zone_forward.rc != 0
+  tags:
+    - dns
+    - dns_validate
+
+- name: Check reverse zone file syntax post-reload
+  ansible.builtin.command:
+    cmd: "named-checkzone {{ dns_reverse_zone }} /etc/bind/{{ dns_reverse_zone_file }}"
+  register: check_zone_reverse
+  changed_when: false
+  failed_when: check_zone_reverse.rc != 0
+  tags:
+    - dns
+    - dns_validate
+
+- name: Wait for DNS port 53 to be available
+  ansible.builtin.wait_for:
+    port: 53
+    host: 127.0.0.1
+    timeout: 5
+  tags:
+    - dns
+    - dns_validate
+
+- name: Authoritative forward lookup validation
+  ansible.builtin.command:
+    cmd: "dig @127.0.0.1 {{ dns_validation_record }}.{{ dns_domain }} +short"
+  register: dig_forward
+  changed_when: false
+  failed_when: dig_forward.rc != 0 or dig_forward.stdout == ""
+  when: dns_validation_record != ""
+  tags:
+    - dns
+    - dns_validate
+
+- name: Authoritative reverse lookup validation
+  ansible.builtin.command:
+    cmd: "dig @127.0.0.1 -x {{ dns_records_a[0].ip }} +short"
+  register: dig_reverse
+  changed_when: false
+  failed_when: dig_reverse.rc != 0 or dig_reverse.stdout == ""
+  when: dns_records_a | length > 0
+  tags:
+    - dns
+    - dns_validate
+
+- name: Recursive resolution validation (external query)
+  ansible.builtin.command:
+    cmd: "dig @127.0.0.1 {{ dns_recursion_test_domain }} +short"
+  register: dig_recursion
+  changed_when: false
+  failed_when: dig_recursion.rc != 0 or dig_recursion.stdout == ""
+  when: dns_recursion_enabled
+  tags:
+    - dns
+    - dns_validate

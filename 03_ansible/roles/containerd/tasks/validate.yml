@@ -1,0 +1,26 @@
+---
+- name: Validate containerd_version format
+  ansible.builtin.assert:
+    that:
+      - containerd_version == "" or containerd_version is match('^\d+\.\d+\.\d+.*$')
+    fail_msg: "containerd_version must be empty or a valid semantic version (e.g., '2.2.0-1')."
+    quiet: true
+
+- name: Validate containerd_registry_mirrors structure and types
+  ansible.builtin.assert:
+    that:
+      - item.server is defined
+      - item.server is string
+      - item.server | length > 0
+      # Allows hostname and optional port (e.g., 'docker.io' or 'harbor.lab.local:8443')
+      - item.server is match('^[a-zA-Z0-9.:-]+$')
+      - item.endpoint is defined
+      - item.endpoint is string
+      - item.endpoint | length > 0
+      - item.endpoint is match('^https?://.*')
+    fail_msg: >
+      Each registry mirror must have 'server' (valid hostname with optional port) 
+      and 'endpoint' (starting with http:// or https://) defined as non-empty strings.
+    quiet: true
+  loop: "{{ containerd_registry_mirrors }}"
+  when: containerd_registry_mirrors | length > 0

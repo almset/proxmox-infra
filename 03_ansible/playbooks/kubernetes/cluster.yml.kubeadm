@@ -1,0 +1,15 @@
+---
+- name: Configure ContainerD for Kubernetes control plane
+  hosts: k8s_master
+  become: true
+  roles:
+    - containerd
+    - kubeadm
+
+- name: Configure ContainerD for Kubernetes workers
+  hosts: k8s_worker
+  become: true
+  roles:
+    - containerd
+    - kubeadm
+

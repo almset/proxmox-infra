@@ -1,0 +1,11 @@
+# Ansible managed
+# Sudo access for administrators group
+# File: /etc/sudoers.d/91-hardening-admins
+
+{% if hardening_sudo_require_password %}
+# Admin group must provide password
+%{{ hardening_sudo_group }} ALL=(ALL:ALL) ALL
+{% else %}
+# Admin group can run commands without password
+%{{ hardening_sudo_group }} ALL=(ALL:ALL) NOPASSWD: ALL
+{% endif %}

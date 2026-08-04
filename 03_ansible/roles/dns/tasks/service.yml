@@ -1,0 +1,6 @@
+---
+- name: Ensure BIND9 service is started and enabled
+  ansible.builtin.service:
+    name: "{{ dns_service_name }}"
+    state: started
+    enabled: true

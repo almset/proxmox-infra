@@ -1,0 +1,7 @@
+---
+- name: Configure gateway with role
+  hosts: router-prod-01  # Или имя твоей группы хостов, например 'gateways'
+  become: yes
+  
+  roles:
+    - role: gateway

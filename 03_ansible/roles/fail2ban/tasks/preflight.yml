@@ -1,0 +1,36 @@
+---
+- name: Validate target OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Debian"
+    fail_msg: "This role supports only Debian-based distributions"
+    success_msg: "OS family validated: {{ ansible_os_family }}"
+  tags:
+    - fail2ban
+    - fail2ban_preflight
+
+- name: Validate fail2ban_sshd.logpath
+  ansible.builtin.assert:
+    that:
+      - fail2ban_sshd.logpath is defined
+      - fail2ban_sshd.logpath | length > 0
+    fail_msg: "fail2ban_sshd.logpath must be defined and non-empty"
+  tags:
+    - fail2ban
+    - fail2ban_preflight
+
+- name: Validate fail2ban_extra_jails structure
+  ansible.builtin.assert:
+    that:
+      - item.name is defined
+      - item.logpath is defined
+      - item.name | length > 0
+      - item.logpath | length > 0
+    fail_msg: "Each extra jail must have 'name' and 'logpath' defined"
+  loop: "{{ fail2ban_extra_jails }}"
+  loop_control:
+    label: "{{ item.name | default('unnamed') }}"
+  when: fail2ban_extra_jails | length > 0
+  tags:
+    - fail2ban
+    - fail2ban_preflight

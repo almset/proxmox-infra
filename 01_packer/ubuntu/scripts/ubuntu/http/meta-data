@@ -1,0 +1,2 @@
+instance-id: ubuntu-base-image
+local-hostname: ubuntu-base

@@ -1,0 +1,49 @@
+---
+argument_specs:
+  main:
+    short_description: Configure Linux gateway with NAT and IP forwarding.
+    options:
+      gateway_enabled:
+        type: bool
+        default: true
+        description: Master switch for the role.
+      gateway_manage_forwarding:
+        type: bool
+        default: true
+        description: Whether to manage sysctl IP forwarding settings.
+      gateway_manage_firewall:
+        type: bool
+        default: true
+        description: Whether to deploy and manage iptables rules.
+      gateway_install_persistent:
+        type: bool
+        default: true
+        description: Whether to install iptables-persistent package.
+      gateway_enable_logging:
+        type: bool
+        default: false
+        description: Enable logging for dropped packets in FORWARD chain.
+      gateway_nat_enabled:
+        type: bool
+        default: true
+        description: Enable NAT (MASQUERADE). Disable for pure router mode.
+      gateway_internal_network:
+        type: str
+        default: "192.168.100.0/24"
+        description: Internal network CIDR for NAT and forwarding rules.
+      gateway_external_interface:
+        type: str
+        default: "eth0"
+        description: Name of the external network interface.
+      gateway_internal_interface:
+        type: str
+        default: "eth1"
+        description: Name of the internal network interface.
+      gateway_extra_filter_rules:
+        type: list
+        default: []
+        description: Additional iptables rules for the filter table.
+      gateway_extra_nat_rules:
+        type: list
+        default: []
+        description: Additional iptables rules for the nat table.

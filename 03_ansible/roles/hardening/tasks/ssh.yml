@@ -1,0 +1,27 @@
+---
+- name: Ensure openssh-server is installed
+  ansible.builtin.apt:
+    name: openssh-server
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: hardening_manage_ssh | bool
+
+- name: Ensure sshd_config.d directory exists
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  when: hardening_manage_ssh | bool
+
+- name: Configure SSH hardening via drop-in file
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config.d/99-hardening.conf
+    owner: root
+    group: root
+    mode: '0600'
+  when: hardening_manage_ssh | bool
+  notify: Reload ssh

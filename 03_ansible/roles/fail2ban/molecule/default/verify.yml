@@ -1,0 +1,136 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Assert fail2ban package is installed
+      ansible.builtin.assert:
+        that: "'fail2ban' in ansible_facts.packages"
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Assert fail2ban service is running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['fail2ban.service'] is defined
+          - ansible_facts.services['fail2ban.service'].state == 'running'
+
+    - name: Check global configuration exists
+      ansible.builtin.stat:
+        path: /etc/fail2ban/jail.local
+      register: jail_local
+
+    - name: Assert jail.local exists
+      ansible.builtin.assert:
+        that: jail_local.stat.exists
+
+    - name: Check sshd jail configuration exists
+      ansible.builtin.stat:
+        path: /etc/fail2ban/jail.d/10-sshd.local
+      register: sshd_local
+
+    - name: Assert 10-sshd.local exists
+      ansible.builtin.assert:
+        that: sshd_local.stat.exists
+
+    - name: Check recidive jail configuration exists
+      ansible.builtin.stat:
+        path: /etc/fail2ban/jail.d/05-recidive.local
+      register: recidive_local
+
+    - name: Assert 05-recidive.local exists
+      ansible.builtin.assert:
+        that: recidive_local.stat.exists
+
+    - name: Ping fail2ban daemon
+      ansible.builtin.command: fail2ban-client ping
+      register: f2b_ping
+      changed_when: false
+
+    - name: Assert fail2ban daemon responds with pong
+      ansible.builtin.assert:
+        that: "'Server replied: pong' in f2b_ping.stdout"
+
+    - name: Validate fail2ban configuration syntax
+      ansible.builtin.command: fail2ban-client -t
+      register: f2b_check
+      changed_when: false
+
+    - name: Assert configuration is valid
+      ansible.builtin.assert:
+        that: f2b_check.rc == 0
+
+    - name: Get overall fail2ban status
+      ansible.builtin.command: fail2ban-client status
+      register: f2b_status
+      changed_when: false
+
+    - name: Assert jails are registered
+      ansible.builtin.assert:
+        that:
+          - "'Number of jail:' in f2b_status.stdout"
+          - "'Jail list:' in f2b_status.stdout"
+          - "'sshd' in f2b_status.stdout"
+          - "'recidive' in f2b_status.stdout"
+
+    - name: Verify sshd jail is loaded
+      ansible.builtin.command: fail2ban-client status sshd
+      register: sshd_status
+      changed_when: false
+
+    - name: Assert sshd jail is fully active
+      ansible.builtin.assert:
+        that:
+          - "'Status for the jail: sshd' in sshd_status.stdout"
+          - "'Filter' in sshd_status.stdout"
+          - "'Actions' in sshd_status.stdout"
+
+    - name: Verify recidive jail is loaded
+      ansible.builtin.command: fail2ban-client status recidive
+      register: recidive_status
+      changed_when: false
+
+    - name: Assert recidive jail is fully active
+      ansible.builtin.assert:
+        that:
+          - "'Status for the jail: recidive' in recidive_status.stdout"
+          - "'Filter' in recidive_status.stdout"
+          - "'Actions' in recidive_status.stdout"
+
+    - name: Check extra jail configurations exist
+      ansible.builtin.stat:
+        path: "/etc/fail2ban/jail.d/10-{{ item.name }}.local"
+      register: extra_jail_stats
+      loop: "{{ fail2ban_extra_jails }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: fail2ban_extra_jails | length > 0
+
+    - name: Verify extra jails are loaded
+      ansible.builtin.command: "fail2ban-client status {{ item.item.name }}"
+      register: extra_jail_status
+      changed_when: false
+      loop: "{{ extra_jail_stats.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when:
+        - fail2ban_extra_jails | length > 0
+        - item.stat.exists | default(false)
+
+    - name: Assert extra jails are fully active
+      ansible.builtin.assert:
+        that:
+          - "'Status for the jail: {{ item.item.item.name }}' in item.stdout"
+          - "'Filter' in item.stdout"
+          - "'Actions' in item.stdout"
+      loop: "{{ extra_jail_status.results }}"
+      loop_control:
+        label: "{{ item.item.item.name }}"
+      when:
+        - fail2ban_extra_jails | length > 0
+        - item is not skipped

@@ -1,0 +1,8 @@
+# Managed by Ansible
+server = "https://{{ item.server }}"
+
+[host."{{ item.endpoint }}"]
+  capabilities = ["pull", "resolve"]
+{% if item.skip_verify | default(false) %}
+  skip_verify = true
+{% endif %}

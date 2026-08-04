@@ -1,0 +1,72 @@
+---
+# ==============================================================================
+# Cleanup
+# ==============================================================================
+containerd_cleanup: false
+# NOTE: 'containerd.io' is intentionally excluded. Removing the target package 
+# causes guaranteed CRI downtime. This list is for migrating away from conflicting packages only.
+containerd_cleanup_packages:
+  - docker.io
+  - docker
+  - docker-ce
+  - containerd
+# Set to true to also remove orphaned dependencies. 
+# Disabled by default to avoid accidentally removing packages used by other workloads.
+containerd_cleanup_autoremove: false
+
+# ==============================================================================
+# Scope Management (Integration with base/hardening roles)
+# ==============================================================================
+containerd_manage_repository: true
+containerd_manage_gpg_key: true
+containerd_manage_kernel: true
+containerd_manage_sysctl: true
+
+# ==============================================================================
+# Installation
+# ==============================================================================
+# Leave empty to install the latest 2.2.x version from Docker Repository.
+# Recommended for Ubuntu 24.04+.
+containerd_version: ""
+
+# Optional SHA256 checksum for Docker GPG key (enterprise security hardening)
+containerd_docker_gpg_checksum: ""
+
+# Architecture mapping for deb822_repository
+containerd_arch_map:
+  x86_64: amd64
+  aarch64: arm64
+  armv7l: armhf
+  ppc64le: ppc64le
+  s390x: s390x
+
+# Enterprise: Allow overriding the repository URL for internal mirrors (Nexus, Artifactory, etc.)
+containerd_repository_url: "https://download.docker.com/linux/ubuntu"
+
+# ==============================================================================
+# Configuration
+# ==============================================================================
+containerd_config_dir: /etc/containerd
+containerd_systemd_cgroup: true
+containerd_sandbox_image: "registry.k8s.io/pause:3.10.1"
+
+# If true, or if legacy config (not version 3 OR disabled_plugins contains "cri") is detected,
+# the main config.toml will be deleted and regenerated from defaults.
+containerd_regenerate_config: false
+
+# ==============================================================================
+# Registry mirrors (Containerd 2.x format: certs.d / hosts.toml)
+# ==============================================================================
+containerd_registry_mirrors: []
+
+# ==============================================================================
+# Kernel & Sysctl
+# ==============================================================================
+containerd_kernel_modules:
+  - overlay
+  - br_netfilter
+
+containerd_sysctl_params:
+  net.bridge.bridge-nf-call-iptables: 1
+  net.bridge.bridge-nf-call-ip6tables: 1
+  net.ipv4.ip_forward: 1

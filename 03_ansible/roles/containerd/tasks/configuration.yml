@@ -1,0 +1,16 @@
+---
+- name: Include configuration preparation tasks
+  ansible.builtin.import_tasks: config_prepare.yml
+  tags: [containerd, configuration]
+
+- name: Include configuration generation tasks
+  ansible.builtin.import_tasks: config_generate.yml
+  tags: [containerd, configuration]
+
+- name: Include configuration imports tasks
+  ansible.builtin.import_tasks: config_imports.yml
+  tags: [containerd, configuration]
+
+- name: Include registry configuration tasks
+  ansible.builtin.import_tasks: config_registry.yml
+  tags: [containerd, configuration]

@@ -1,0 +1,69 @@
+---
+- name: Compute RKE2 facts
+  ansible.builtin.import_tasks: facts.yml
+  tags: [rke2, facts]
+
+- name: Include preflight checks
+  ansible.builtin.import_tasks: preflight.yml
+  tags: [rke2, preflight]
+
+- name: Include variable validation
+  ansible.builtin.import_tasks: validate.yml
+  tags: [rke2, validate]
+
+- name: Include cleanup tasks
+  ansible.builtin.import_tasks: cleanup.yml
+  tags: [rke2, cleanup]
+
+- name: Include installation tasks
+  ansible.builtin.import_tasks: install.yml
+  tags: [rke2, install]
+
+- name: Include server configuration tasks
+  ansible.builtin.import_tasks: config_server.yml
+  when: rke2_is_server | bool
+  tags: [rke2, config]
+
+- name: Include agent configuration tasks
+  ansible.builtin.import_tasks: config_agent.yml
+  when: rke2_is_agent | bool
+  tags: [rke2, config]
+
+- name: Include registries configuration tasks
+  ansible.builtin.import_tasks: registries.yml
+  when: rke2_registries | length > 0
+  tags: [rke2, registries]
+
+- name: Include custom manifests deployment tasks
+  ansible.builtin.import_tasks: manifests.yml
+  when: rke2_deploy_manifests | bool and rke2_is_server | bool
+  tags: [rke2, manifests]
+
+- name: Include PATH export tasks
+  ansible.builtin.import_tasks: path_export.yml
+  when: rke2_export_path | bool
+  tags: [rke2, path]
+
+- name: Include bootstrap tasks
+  ansible.builtin.import_tasks: bootstrap.yml
+  tags: [rke2, bootstrap]
+
+- name: Include service management tasks
+  ansible.builtin.import_tasks: service.yml
+  tags: [rke2, service]
+
+- name: Flush handlers to ensure service is running before waiting
+  ansible.builtin.meta: flush_handlers
+  tags: [rke2, service, wait]
+
+- name: Include cluster readiness wait tasks
+  ansible.builtin.import_tasks: wait.yml
+  tags: [rke2, wait]
+
+- name: Include kubeconfig tasks
+  ansible.builtin.import_tasks: kubeconfig.yml
+  tags: [rke2, kubeconfig]
+
+- name: Include post-installation validation
+  ansible.builtin.import_tasks: post_validate.yml
+  tags: [rke2, post_validate]

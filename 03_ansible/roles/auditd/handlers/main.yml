@@ -1,0 +1,16 @@
+---
+- name: Restart auditd for config changes
+  ansible.builtin.systemd:
+    name: auditd
+    state: restarted
+    daemon_reload: true
+  become: true
+
+- name: Reload auditd rules
+  ansible.builtin.command: augenrules --load
+  become: true
+  changed_when: true
+  register: _augenrules_result
+  failed_when:
+    - _augenrules_result.rc != 0
+    - "'Operation not permitted' not in _augenrules_result.stderr"

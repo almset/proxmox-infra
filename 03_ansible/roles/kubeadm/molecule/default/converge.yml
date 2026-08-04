@@ -1,0 +1,26 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    kubeadm_role: control-plane
+    kubeadm_bootstrap: true
+    kubeadm_cni_plugin: calico
+    kubeadm_cni_manifest_version: "v3.28.0"
+    kubeadm_store_join_command: true
+
+  pre_tasks:
+    - name: Ensure prerequisites for molecule testing
+      ansible.builtin.package:
+        name:
+          - curl
+          - apt-transport-https
+        state: present
+        update_cache: true
+
+    - name: Mock containerd installation for molecule (placeholder)
+      ansible.builtin.debug:
+        msg: "In a real environment, install containerd here before running kubeadm role."
+
+  roles:
+    - role: kubeadm

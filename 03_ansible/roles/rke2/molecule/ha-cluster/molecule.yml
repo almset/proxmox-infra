@@ -1,0 +1,55 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: ha-server-1
+    image: geerlingguy/docker-ubuntu2404-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /lib/systemd/systemd
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tmpfs:
+      - /run
+      - /tmp
+  - name: ha-server-2
+    image: geerlingguy/docker-ubuntu2404-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /lib/systemd/systemd
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tmpfs:
+      - /run
+      - /tmp
+  - name: ha-server-3
+    image: geerlingguy/docker-ubuntu2404-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /lib/systemd/systemd
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tmpfs:
+      - /run
+      - /tmp
+  - name: ha-agent-1
+    image: geerlingguy/docker-ubuntu2404-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /lib/systemd/systemd
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tmpfs:
+      - /run
+      - /tmp
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+  playbooks:
+    converge: converge.yml
+verifier:
+  name: ansible

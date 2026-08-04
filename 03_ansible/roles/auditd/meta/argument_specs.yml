@@ -1,0 +1,44 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure auditd
+    description: >
+      Installs the Linux audit daemon and deploys custom audit rules.
+      Provides a baseline configuration — not a CIS/STIG hardening profile.
+    options:
+      auditd_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Enable or disable the entire role
+
+      auditd_debug:
+        type: bool
+        required: false
+        default: false
+        description: Show extra debug output during validation
+
+      auditd_immutable:
+        type: bool
+        required: false
+        default: false
+        description: >
+          Lock audit rules after loading (-e 2).
+          Requires a reboot to change rules afterwards.
+
+      auditd_packages_map:
+        type: dict
+        required: false
+        description: Mapping of OS family to package list
+
+      auditd_conf:
+        type: dict
+        required: false
+        description: Key-value pairs for /etc/audit/auditd.conf
+
+      auditd_rules:
+        type: list
+        required: false
+        description: >
+          List of rule file definitions. Each item must have 'src' and 'dest'.
+          Optional keys: owner, group, mode.

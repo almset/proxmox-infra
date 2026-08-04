@@ -1,0 +1,59 @@
+---
+# --- Restart handlers (for global config changes) ---
+- name: Validate fail2ban configuration
+  ansible.builtin.command: fail2ban-client -t
+  register: f2b_validate
+  changed_when: false
+  failed_when: false
+  listen: Restart fail2ban
+
+- name: Restart fail2ban service
+  ansible.builtin.systemd:
+    name: "{{ fail2ban_service_name }}"
+    state: restarted
+  when: f2b_validate.rc == 0
+  listen: Restart fail2ban
+
+- name: Verify fail2ban is operational after restart
+  ansible.builtin.command: fail2ban-client status
+  register: f2b_post_check
+  changed_when: false
+  failed_when: false
+  when: f2b_validate.rc == 0
+  listen: Restart fail2ban
+
+- name: Fail on invalid configuration
+  ansible.builtin.fail:
+    msg: "fail2ban configuration validation failed: {{ f2b_validate.stderr | default('unknown error') }}"
+  when: f2b_validate.rc != 0
+  listen: Restart fail2ban
+
+- name: Fail on non-operational service after restart
+  ansible.builtin.fail:
+    msg: "fail2ban service restarted but is not operational: {{ f2b_post_check.stderr | default('unknown error') }}"
+  when:
+    - f2b_validate.rc == 0
+    - f2b_post_check.rc != 0
+  listen: Restart fail2ban
+
+# --- Reload handlers (for jail-only changes, faster) ---
+- name: Validate fail2ban configuration for reload
+  ansible.builtin.command: fail2ban-client -t
+  register: f2b_reload_validate
+  changed_when: false
+  failed_when: false
+  listen: Reload fail2ban
+
+- name: Reload fail2ban service
+  ansible.builtin.systemd:
+    name: "{{ fail2ban_service_name }}"
+    state: reloaded
+  when: f2b_reload_validate.rc == 0
+  listen: Reload fail2ban
+
+- name: Fail on invalid configuration during reload
+  ansible.builtin.fail:
+    msg: "fail2ban configuration validation failed: {{ f2b_reload_validate.stderr | default('unknown error') }}"
+  when: f2b_reload_validate.rc != 0
+  listen: Reload fail2ban
+

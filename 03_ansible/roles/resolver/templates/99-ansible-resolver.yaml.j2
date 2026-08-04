@@ -1,0 +1,16 @@
+# Управляется Ansible. Не редактируйте вручную.
+# Этот файл дополняет базовую конфигурацию (например, 50-cloud-init.yaml), добавляя только DNS-настройки.
+network:
+  version: 2
+  ethernets:
+    {{ resolver_target_interface }}:
+      nameservers:
+        addresses:
+{% for dns in resolver_nameservers %}
+          - {{ dns }}
+{% endfor %}
+        search:
+{% for domain in resolver_search_domains %}
+          - {{ domain }}
+{% endfor %}
+

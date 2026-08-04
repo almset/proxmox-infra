@@ -1,0 +1,54 @@
+---
+- name: Ensure sudo package is installed
+  ansible.builtin.apt:
+    name: sudo
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: hardening_manage_sudo | bool
+
+- name: Ensure sudo log file exists
+  ansible.builtin.file:
+    path: "{{ hardening_sudo_logfile }}"
+    state: touch
+    owner: root
+    group: root
+    mode: '0600'
+    modification_time: preserve
+    access_time: preserve
+  when:
+    - hardening_manage_sudo | bool
+    - hardening_sudo_logfile | default('', true) | length > 0
+
+- name: Sudo | Deploy 10-hardening-defaults
+  ansible.builtin.template:
+    src: 10-hardening-defaults.j2
+    dest: /etc/sudoers.d/10-hardening-defaults
+    owner: root
+    group: root
+    mode: '0440'
+    validate: /usr/sbin/visudo -cf %s
+  when: hardening_sudo_manage_defaults | bool
+  tags: [hardening, sudo]
+
+- name: Sudo | Deploy 99-hardening-ansible
+  ansible.builtin.template:
+    src: 99-hardening-ansible.j2
+    dest: /etc/sudoers.d/99-hardening-ansible
+    owner: root
+    group: root
+    mode: '0440'
+    validate: /usr/sbin/visudo -cf %s
+  when: hardening_sudo_manage_ansible | bool
+  tags: [hardening, sudo]
+
+- name: Sudo | Deploy 20-hardening-admins
+  ansible.builtin.template:
+    src: 20-hardening-admins.j2
+    dest: /etc/sudoers.d/20-hardening-admins
+    owner: root
+    group: root
+    mode: '0440'
+    validate: /usr/sbin/visudo -cf %s
+  when: hardening_sudo_manage_admins | bool
+  tags: [hardening, sudo]

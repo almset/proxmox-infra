@@ -1,0 +1,50 @@
+---
+argument_specs:
+  main:
+    short_description: Firewall role for Ubuntu servers (UFW)
+    description:
+      - Install and configure UFW
+      - Manage default policies (incoming/outgoing/forwarding)
+      - Allow SSH access
+      - Apply extra rules (port-based and IP-based)
+    author: Almas
+    options:
+      firewall_ufw_default_input:
+        type: str
+        default: deny
+        choices: [allow, deny, reject]
+        description: Default policy for incoming connections
+      firewall_ufw_default_output:
+        type: str
+        default: allow
+        choices: [allow, deny, reject]
+        description: Default policy for outgoing connections
+      firewall_ufw_default_forward:
+        type: str
+        default: deny
+        choices: [allow, deny, reject]
+        description: Default policy for forwarding
+      firewall_ufw_logging:
+        type: str
+        default: "on"
+        choices: ["on", "off", "low", "medium", "high", "full"]
+        description: UFW logging level
+#      firewall_ufw_ssh_enabled:
+#        type: bool
+#        default: true
+#        description: Whether to allow SSH access through UFW
+#      firewall_ufw_ssh_port:
+#        type: int
+#        default: 22
+#        description: SSH port number (1-65535)
+      firewall_rules:
+        type: list
+        default: []
+        elements: dict
+        description: >
+          List of extra UFW rules. Each rule must have 'rule' (allow/deny/reject/limit)
+          and either 'port' (port-based) or 'from_ip' + 'to_port' (IP-based).
+      firewall_ufw_reset:
+        type: bool
+        default: false
+        description: Reset UFW to factory defaults before applying rules

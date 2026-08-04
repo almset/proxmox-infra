@@ -1,0 +1,11 @@
+# Ansible managed
+# Sudo access for Ansible automation user
+# File: /etc/sudoers.d/90-hardening-ansible
+
+{% if hardening_sudo_ansible_nopasswd %}
+# Ansible user can run all commands without password
+{{ hardening_sudo_ansible_user }} ALL=(ALL:ALL) NOPASSWD: ALL
+{% else %}
+# Ansible user can run all commands with password
+{{ hardening_sudo_ansible_user }} ALL=(ALL:ALL) ALL
+{% endif %}

@@ -1,0 +1,35 @@
+---
+- name: Converge HA Cluster - Primary Server
+  hosts: ha-server-1
+  become: true
+  serial: 1
+  vars:
+    rke2_type: server
+    rke2_token: "molecule-ha-secure-token-456"
+    rke2_disable:
+      - rke2-ingress-nginx
+  roles:
+    - role: rke2
+
+- name: Converge HA Cluster - Join Servers
+  hosts: ha-server-2,ha-server-3
+  become: true
+  serial: 1
+  vars:
+    rke2_type: server
+    rke2_token: "molecule-ha-secure-token-456"
+    rke2_server_url: "https://ha-server-1:9345"
+    rke2_disable:
+      - rke2-ingress-nginx
+  roles:
+    - role: rke2
+
+- name: Converge HA Cluster - Agents
+  hosts: ha-agent-1
+  become: true
+  vars:
+    rke2_type: agent
+    rke2_token: "molecule-ha-secure-token-456"
+    rke2_server_url: "https://ha-server-1:9345"
+  roles:
+    - role: rke2

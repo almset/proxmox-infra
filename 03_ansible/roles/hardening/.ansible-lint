@@ -1,0 +1,21 @@
+---
+profile: production
+
+skip_list:
+  - name[missing]
+  - yaml[line-length]
+  - no-changed-when
+
+warn_list:
+  - experimental
+  - role-name
+
+exclude_paths:
+  - .github/
+  - molecule/
+  - .cache/
+  - roles/*/molecule/
+
+offline: false
+use_default_rules: true
+verbosity: 1

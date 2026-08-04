@@ -1,0 +1,29 @@
+options {
+    directory "/var/cache/bind";
+
+    listen-on { {{ dns_listen | join('; ') }}; };
+    listen-on-v6 { none; };
+
+    allow-query {
+        {{ dns_allow_query | join('; ') }};
+    };
+
+{% if dns_forwarders | length > 0 %}
+    forwarders {
+        {{ dns_forwarders | join('; ') }};
+    };
+{% endif %}
+
+{% if dns_recursion_enabled %}
+    recursion yes;
+    allow-recursion {
+        {{ dns_allow_recursion | join('; ') }};
+    };
+{% else %}
+    recursion no;
+{% endif %}
+
+    auth-nxdomain no;
+    minimal-responses yes;
+    dnssec-validation auto;
+};

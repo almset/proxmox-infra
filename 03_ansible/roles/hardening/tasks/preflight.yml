@@ -1,0 +1,62 @@
+---
+- name: Check supported OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Debian"
+    fail_msg: "This role supports only Debian-based systems"
+    success_msg: "OS family check passed"
+
+- name: Check supported distribution
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_version is version('22.04', '>=')
+    fail_msg: "This role supports only Ubuntu 22.04+"
+    success_msg: "Distribution check passed"
+
+- name: Check init system is systemd
+  ansible.builtin.assert:
+    that:
+      - ansible_service_mgr == "systemd"
+    fail_msg: "This role requires systemd as init system"
+    success_msg: "Init system check passed"
+
+- name: Validate sysctl_extra_params has no duplicates
+  vars:
+    sysctl_names: "{{ hardening_sysctl_extra_params | map(attribute='name') | list }}"
+  ansible.builtin.assert:
+    that:
+      - sysctl_names | length == sysctl_names | unique | length
+    fail_msg: "Duplicate parameter names found in hardening_sysctl_extra_params"
+    success_msg: "Sysctl parameters are unique"
+  when: hardening_sysctl_extra_params | length > 0
+
+- name: Validate no conflict between AllowUsers and DenyUsers
+  vars:
+    allow_users_clean: "{{ hardening_ssh_allow_users | map('trim') | reject('equalto', '') | list }}"
+    deny_users_clean: "{{ hardening_ssh_deny_users | map('trim') | reject('equalto', '') | list }}"
+  ansible.builtin.assert:
+    that:
+      - (allow_users_clean | intersect(deny_users_clean) | length) == 0
+    fail_msg: >-
+      Conflict detected: users present in both AllowUsers and DenyUsers:
+      {{ allow_users_clean | intersect(deny_users_clean) | join(', ') }}
+    success_msg: "No conflict between AllowUsers and DenyUsers"
+  when:
+    - allow_users_clean | length > 0
+    - deny_users_clean | length > 0
+
+- name: Validate no conflict between AllowGroups and DenyGroups
+  vars:
+    allow_groups_clean: "{{ hardening_ssh_allow_groups | map('trim') | reject('equalto', '') | list }}"
+    deny_groups_clean: "{{ hardening_ssh_deny_groups | map('trim') | reject('equalto', '') | list }}"
+  ansible.builtin.assert:
+    that:
+      - (allow_groups_clean | intersect(deny_groups_clean) | length) == 0
+    fail_msg: >-
+      Conflict detected: groups present in both AllowGroups and DenyGroups:
+      {{ allow_groups_clean | intersect(deny_groups_clean) | join(', ') }}
+    success_msg: "No conflict between AllowGroups and DenyGroups"
+  when:
+    - allow_groups_clean | length > 0
+    - deny_groups_clean | length > 0

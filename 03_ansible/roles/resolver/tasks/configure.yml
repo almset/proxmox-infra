@@ -1,0 +1,18 @@
+---
+- name: Ensure Netplan DNS drop-in configuration is present
+  ansible.builtin.template:
+    src: 99-ansible-resolver.yaml.j2
+    dest: "/etc/netplan/99-ansible-resolver.yaml"
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  when: resolver_state == 'present'
+  notify: reload network
+
+- name: Ensure Netplan DNS drop-in configuration is absent
+  ansible.builtin.file:
+    path: "/etc/netplan/99-ansible-resolver.yaml"
+    state: absent
+  when: resolver_state == 'absent'
+  notify: reload network

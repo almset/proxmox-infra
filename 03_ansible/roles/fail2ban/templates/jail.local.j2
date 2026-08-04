@@ -1,0 +1,32 @@
+# {{ ansible_managed }}
+# Global fail2ban configuration
+
+[DEFAULT]
+
+# Backend (auto is recommended for portability, systemd for Ubuntu 22.04+)
+backend = {{ fail2ban_default.backend }}
+
+# Ban action (iptables-multiport for maximum compatibility)
+banaction = {{ fail2ban_default.banaction }}
+
+# Default ban parameters
+bantime  = {{ fail2ban_default.bantime }}
+findtime = {{ fail2ban_default.findtime }}
+maxretry = {{ fail2ban_default.maxretry }}
+
+# Progressive ban time
+bantime.increment = {{ fail2ban_default.bantime_increment | bool | lower }}
+bantime.factor    = {{ fail2ban_default.bantime_factor }}
+{% if fail2ban_default.bantime_formula_enabled | bool %}
+bantime.formula   = {{ fail2ban_default.bantime_formula }}
+{% endif %}
+bantime.overalljails = {{ fail2ban_default.bantime_overalljails | bool | lower }}
+
+# IPs that should never be banned
+ignoreip = {{ fail2ban_default.ignoreip | join(' ') }}
+
+# Email notifications (disabled by default)
+destemail  = root@localhost
+sender     = root@localhost
+mta        = sendmail
+action     = %(action_)s

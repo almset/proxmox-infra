@@ -1,0 +1,16 @@
+---
+- name: Generate default containerd configuration (v2.2+ format)
+  ansible.builtin.command:
+    cmd: containerd config default
+  register: _default_config
+  changed_when: false
+  failed_when: _default_config.rc != 0
+  when: _needs_regeneration | bool
+
+- name: Write default containerd configuration
+  ansible.builtin.copy:
+    content: "{{ _default_config.stdout }}"
+    dest: "{{ containerd_config_dir }}/config.toml"
+    mode: '0644'
+  when: _needs_regeneration | bool
+  notify: Restart containerd

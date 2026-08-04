@@ -1,0 +1,43 @@
+---
+- name: DNS configuration
+  hosts: dns-prod-01
+  become: true
+  roles:
+    - dns
+
+- name: Gateway configuration
+  hosts: router-prod-01
+  become: true
+  roles:
+    - gateway
+
+- name: Base configuration
+  hosts: linux
+  become: true
+  roles:
+    - base
+
+- name: DNS resolver configuration
+  hosts: linux
+  become: true
+  roles:
+    - resolver
+
+- name: Hardening all Linux and apply security baseline
+  hosts: linux
+  become: true
+  gather_facts: true	  
+
+  roles:
+    - hardening
+    - auditd
+    - fail2ban
+
+- name: Firewall on servers
+  hosts: linux
+  become: true
+
+  roles:
+    - firewall
+
+

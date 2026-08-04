@@ -1,0 +1,10 @@
+---
+- name: Configure resolver DNS
+  hosts: linux:!dns:!router:!haproxy
+
+  become: yes
+  
+  roles:
+    - role: resolver
+
+

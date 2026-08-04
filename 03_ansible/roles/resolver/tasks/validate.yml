@@ -1,0 +1,14 @@
+---
+- name: Validate resolver configuration types and values
+  ansible.builtin.assert:
+    that:
+      - resolver_nameservers | length > 0
+      - resolver_search_domains | length > 0
+      - resolver_target_interface is in ansible_interfaces
+      # Проверка, что все элементы списка являются валидными IP-адресами
+      - resolver_nameservers | map('ansible.utils.ipaddr') | select('string') | list | length == resolver_nameservers | length
+    fail_msg: >
+      Ошибка валидации:
+      1. Проверьте, что resolver_nameservers содержит только валидные IPv4/IPv6 адреса.
+      2. Интерфейс {{ resolver_target_interface }} не найден в системе.
+    success_msg: "Конфигурация валидна, все параметры корректны."

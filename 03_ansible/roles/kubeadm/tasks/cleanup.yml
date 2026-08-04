@@ -1,0 +1,25 @@
+---
+- name: Reset Kubernetes cluster
+  ansible.builtin.command:
+    cmd: kubeadm reset -f
+  register: _reset_result
+  changed_when: _reset_result.rc == 0
+  failed_when: false
+  when: kubeadm_cleanup_full | bool
+
+- name: Clean up Kubernetes directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/cni
+    - /var/lib/cni
+    - /var/lib/kubelet
+    - /etc/kubernetes
+  when: kubeadm_cleanup_full | bool
+
+- name: Wipe etcd data directory (DANGEROUS)
+  ansible.builtin.file:
+    path: /var/lib/etcd
+    state: absent
+  when: kubeadm_cleanup_full | bool and kubeadm_cleanup_etcd | bool

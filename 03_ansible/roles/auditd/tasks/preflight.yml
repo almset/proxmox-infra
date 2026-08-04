@@ -1,0 +1,31 @@
+---
+- name: Preflight | Check if OS is Linux
+  ansible.builtin.assert:
+    that:
+      - ansible_system == "Linux"
+    fail_msg: "This role supports only Linux systems."
+    success_msg: "OS check passed."
+
+- name: Preflight | Check if systemd is used
+  ansible.builtin.assert:
+    that:
+      - ansible_service_mgr == "systemd"
+    fail_msg: "This role requires systemd as init system."
+    success_msg: "Init system check passed."
+
+- name: Preflight | Check supported OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family in ['Debian', 'RedHat']
+    fail_msg: >
+      Unsupported OS family '{{ ansible_os_family }}'.
+      Supported: Debian, RedHat.
+    success_msg: "OS family check passed."
+
+- name: Preflight | Check package mapping exists
+  ansible.builtin.assert:
+    that:
+      - auditd_packages_map.get(ansible_os_family) is not none
+    fail_msg: >
+      No package mapping defined for OS family '{{ ansible_os_family }}'.
+    success_msg: "Package mapping found for {{ ansible_os_family }}."

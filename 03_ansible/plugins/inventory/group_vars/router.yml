@@ -1,0 +1,3 @@
+firewall_enabled: false
+resolver_target_interface: "eth1"
+

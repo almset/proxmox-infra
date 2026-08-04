@@ -1,0 +1,13 @@
+# Managed by Ansible - rke2 role
+# Export RKE2 binaries to PATH for all users
+export PATH=$PATH:{{ rke2_data_dir }}/bin
+
+# Set default KUBECONFIG for root user only (security best practice)
+# Regular users should copy the config to ~/.kube/config and adjust permissions
+if [ "$(id -u)" -eq 0 ]; then
+    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+fi
+
+#if [ "$EUID" -eq 0 ]; then
+#  export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+#fi

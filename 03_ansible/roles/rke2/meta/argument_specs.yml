@@ -1,0 +1,87 @@
+---
+argument_specs:
+  main:
+    short_description: Production-ready RKE2 installation
+    options:
+      rke2_type:
+        type: str
+        required: true
+        choices: [server, agent]
+      rke2_token:
+        type: str
+        required: true
+      rke2_server_url:
+        type: str
+      rke2_cni:
+        type: str
+        choices: [calico, canal, cilium, flannel, multus, none]
+        default: calico
+      rke2_cluster_cidr:
+        type: str
+        default: "10.42.0.0/16"
+      rke2_service_cidr:
+        type: str
+        default: "10.43.0.0/16"
+      rke2_disable:
+        type: list
+        elements: str
+        default: []
+      rke2_wait_components:
+        type: dict
+      rke2_api_endpoint:
+        type: str
+      rke2_kubeconfig_export_mode:
+        type: str
+        choices: [node_only, controller]
+        default: node_only
+      rke2_cleanup_full:
+        type: bool
+        default: false
+      rke2_registries:
+        type: dict
+        default: {}
+      rke2_deploy_manifests:
+        type: bool
+        default: false
+      rke2_export_path:
+        type: bool
+        default: true
+      rke2_protect_kernel_defaults:
+        type: bool
+        default: true
+      rke2_selinux:
+        type: bool
+        default: false
+      rke2_cloud_provider_name:
+        type: str
+        default: ""
+      rke2_disable_kube_proxy:
+        type: bool
+        default: false
+      rke2_node_ip:
+        type: str
+        default: ""
+      rke2_node_external_ip:
+        type: str
+        default: ""
+      rke2_resolv_conf:
+        type: str
+        default: ""
+      rke2_snapshotter:
+        type: str
+        default: ""
+      rke2_kubelet_extra_env:
+        type: dict
+        default: {}
+      rke2_etcd_snapshot_schedule_cron:
+        type: str
+        default: "0 */12 * * *"
+      rke2_etcd_snapshot_retention:
+        type: int
+        default: 5
+      rke2_etcd_snapshot_compression:
+        type: bool
+        default: true
+      rke2_etcd_snapshot_dir:
+        type: str
+        default: ""

@@ -1,0 +1,45 @@
+---
+- name: Ensure manifests directory exists
+  ansible.builtin.file:
+    path: "{{ rke2_data_dir }}/server/manifests"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Deploy templated manifests (Jinja2)
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ rke2_data_dir }}/server/manifests/{{ item | basename | regex_replace('\\.j2$', '') }}"
+    mode: '0644'
+    owner: root
+    group: root
+  with_fileglob:
+    - "templates/manifests/*"
+  when: rke2_is_server | bool
+  notify: "Manifests updated"
+
+- name: Deploy static manifests (plain YAML)
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ rke2_data_dir }}/server/manifests/{{ item | basename }}"
+    mode: '0644'
+    owner: root
+    group: root
+  with_fileglob:
+    - "files/manifests/*"
+  when: rke2_is_server | bool
+  notify: "Manifests updated"
+
+- name: Wait for deployed manifests to be applied by RKE2
+  ansible.builtin.command:
+    cmd: >-
+      {{ rke2_kubectl_cmd }}
+      wait --for=condition=Established crd --all
+      --timeout=60s || true
+  register: _crd_wait
+  changed_when: false
+  failed_when: false
+  when:
+    - rke2_is_server | bool
+    - rke2_manifests_wait_enabled | bool

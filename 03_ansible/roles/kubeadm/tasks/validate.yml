@@ -1,0 +1,54 @@
+---
+- name: Validate cleanup confirmation
+  ansible.builtin.assert:
+    that: kubeadm_confirm_cleanup | bool
+    fail_msg: "DANGER: kubeadm_cleanup_full requires kubeadm_confirm_cleanup=true to prevent accidental data loss."
+    quiet: true
+  when: kubeadm_cleanup_full | bool
+
+- name: Validate CNI plugin name
+  ansible.builtin.assert:
+    that: kubeadm_cni_plugin in ['calico', 'cilium', 'flannel', 'none']
+    fail_msg: "kubeadm_cni_plugin must be 'calico', 'cilium', 'flannel', or 'none'."
+    quiet: true
+
+#- name: Validate CNI manifest file exists
+#  ansible.builtin.stat:
+#    path: "{{ role_path }}/files/{{ kubeadm_cni_plugin }}/{{ kubeadm_cni_manifest_version }}.yaml"
+#  register: _cni_manifest_stat
+#  failed_when: not _cni_manifest_stat.stat.exists and kubeadm_cni_plugin != 'none'
+#  when: kubeadm_is_bootstrap | bool
+
+- name: Validate CNI manifest file exists (check on Ansible controller)
+  ansible.builtin.stat:
+    path: "{{ role_path }}/files/{{ kubeadm_cni_plugin }}/{{ kubeadm_cni_manifest_version }}.yaml"
+  register: _cni_manifest_stat
+  delegate_to: localhost
+  become: false
+  run_once: true
+  failed_when: not _cni_manifest_stat.stat.exists and kubeadm_cni_plugin != 'none'
+  when: kubeadm_is_bootstrap | bool
+
+- name: Validate bootstrap host is explicitly defined for HA clusters
+  ansible.builtin.assert:
+    that: >
+      kubeadm_bootstrap_host != "" or 
+      (groups[kubeadm_control_plane_group_name] is defined and groups[kubeadm_control_plane_group_name] | length == 1)
+    fail_msg: "For HA clusters (multiple control-plane nodes), 'kubeadm_bootstrap_host' MUST be explicitly defined in inventory to avoid ambiguity."
+    quiet: true
+
+- name: Validate primary flag consistency
+  ansible.builtin.assert:
+    that: not (kubeadm_bootstrap | bool and kubeadm_role == 'worker')
+    fail_msg: "kubeadm_bootstrap can only be true when kubeadm_role is 'control-plane'."
+    quiet: true
+
+- name: Validate CIDR formats (regex-based, no external dependencies)
+  ansible.builtin.assert:
+    that:
+      - kubeadm_pod_network_cidr is match('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/\d{1,2}$')
+      - kubeadm_service_cidr is match('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/\d{1,2}$')
+    fail_msg: >
+      Pod and Service CIDRs must be valid IPv4 networks in CIDR notation (e.g., '10.244.0.0/16').
+      Current values: pod={{ kubeadm_pod_network_cidr }}, service={{ kubeadm_service_cidr }}.
+    quiet: true

@@ -1,0 +1,8 @@
+---
+- name: Deploy RKE2 PATH export script
+  ansible.builtin.template:
+    src: rke2.sh.j2
+    dest: /etc/profile.d/rke2.sh
+    mode: '0644'
+    owner: root
+    group: root

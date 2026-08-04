@@ -1,0 +1,31 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    hostname: ubuntu-base
+    username: packer
+    password: "$6$i/bqdO9WOR.u9vDx$AAgLNdkX4wwJanmsU9yjDfJ5C6UW3tWU4ITrJFKijmdJdAliAr14LS8ODryt6AHC497q4jma/zljoxOmNuSNx1"
+  ssh:
+    install-server: true
+    allow-pw: true
+  user-data:
+    users:
+      - name: packer
+        groups: sudo
+        shell: /bin/bash
+        sudo: ALL=(ALL) NOPASSWD:ALL
+  packages:
+    - qemu-guest-agent
+    - curl
+  storage:
+    layout:
+      name: direct
+  late-commands:
+  - curtin in-target -- apt-get install -y openssh-server
+  - curtin in-target -- systemctl enable ssh
+  - curtin in-target -- systemctl start ssh
+  - curtin in-target -- systemctl enable qemu-guest-agent
+  - curtin in-target -- systemctl start qemu-guest-agent
+
+
+

@@ -1,0 +1,27 @@
+---
+# ============================
+# Master Switch
+# ============================
+gateway_enabled: true
+
+# ============================
+# Feature Flags
+# ============================
+gateway_manage_forwarding: true
+gateway_manage_firewall: true
+gateway_install_persistent: true
+gateway_enable_logging: false
+gateway_nat_enabled: true
+
+# ============================
+# Network Configuration
+# ============================
+gateway_internal_network: "192.168.100.0/24"
+gateway_external_interface: "eth0"
+gateway_internal_interface: "eth1"
+
+# ============================
+# Extensibility
+# ============================
+gateway_extra_filter_rules: []
+gateway_extra_nat_rules: []

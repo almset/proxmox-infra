@@ -1,0 +1,21 @@
+---
+- name: Restart rke2-server
+  ansible.builtin.systemd:
+    name: rke2-server
+    state: restarted
+    enabled: true
+    daemon_reload: true
+  listen: "Restart rke2-server"
+
+- name: Restart rke2-agent
+  ansible.builtin.systemd:
+    name: rke2-agent
+    state: restarted
+    enabled: true
+    daemon_reload: true
+  listen: "Restart rke2-agent"
+
+- name: Mark manifests as updated
+  ansible.builtin.debug:
+    msg: "Custom manifests have been updated. RKE2 will apply them automatically."
+  listen: "Manifests updated"

@@ -1,0 +1,6 @@
+# Managed by Ansible - kubeadm role
+{% if kubeadm_kubelet_extra_args | length > 0 %}
+KUBELET_EXTRA_ARGS="{% for key, value in kubeadm_kubelet_extra_args.items() %}--{{ key }}={{ value }} {% endfor %}"
+{% else %}
+KUBELET_EXTRA_ARGS=""
+{% endif %}

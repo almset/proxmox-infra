@@ -1,0 +1,12 @@
+---
+- name: Include join preflight checks
+  ansible.builtin.import_tasks: preflight.yml
+
+- name: Include bootstrap secrets generation (on-demand, race-condition safe)
+  ansible.builtin.import_tasks: bootstrap-secrets.yml
+
+- name: Include certificate key refresh (control-plane only, race-condition safe)
+  ansible.builtin.import_tasks: certificate-key.yml
+
+- name: Include join execution and cleanup
+  ansible.builtin.import_tasks: execute.yml

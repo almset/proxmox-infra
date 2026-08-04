@@ -1,0 +1,9 @@
+---
+- name: Deploy custom MOTD script
+  ansible.builtin.template:
+    src: motd.j2
+    dest: /etc/update-motd.d/99-ansible-info
+    owner: root
+    group: root
+    mode: '0755'
+  when: base_motd_enabled | bool

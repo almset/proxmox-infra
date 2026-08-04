@@ -1,0 +1,88 @@
+---
+# ==============================================================================
+# Installation
+# ==============================================================================
+kubernetes_version: "1.30.2"
+kubernetes_apt_repository: "https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version | regex_replace('^v?([0-9]+\\.[0-9]+).*', '\\1') }}/deb/"
+kubernetes_apt_key_url: "https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version | regex_replace('^v?([0-9]+\\.[0-9]+).*', '\\1') }}/deb/Release.key"
+
+# ==============================================================================
+# Node Role & Bootstrap
+# ==============================================================================
+kubeadm_role: "control-plane"
+kubeadm_bootstrap: false
+kubeadm_bootstrap_host: ""
+kubeadm_control_plane_group_name: "k8s_control_plane"
+
+# ==============================================================================
+# Cluster Configuration
+# ==============================================================================
+kubeadm_token: ""
+kubeadm_ca_cert_hash: ""
+kubeadm_certificate_key: ""
+kubeadm_api_endpoint: ""
+kubeadm_pod_network_cidr: "10.244.0.0/16"
+kubeadm_service_cidr: "10.96.0.0/12"
+kubeadm_cluster_name: "kubernetes"
+kubeadm_image_repository: ""
+
+# ==============================================================================
+# Addons & CNI
+# ==============================================================================
+kubeadm_install_kube_proxy: true
+kubeadm_cni_plugin: "calico"
+kubeadm_cni_manifest_version: "v3.28.0"
+
+kubeadm_cni_daemonsets:
+  calico: "calico-node"
+  cilium: "cilium"
+  flannel: "kube-flannel-ds"
+
+# ==============================================================================
+# Node Configuration
+# ==============================================================================
+kubeadm_node_name: ""
+kubeadm_node_labels: {}
+kubeadm_node_taints: []
+kubeadm_kubelet_extra_args: {}
+
+# ==============================================================================
+# Kubelet & KubeProxy Configuration
+# ==============================================================================
+kubeadm_kubelet_cgroup_driver: "systemd"
+kubeadm_kubelet_shutdown_grace_period: "30s"
+kubeadm_kubelet_shutdown_grace_period_critical_pods: "10s"
+kubeadm_kubelet_rotate_certificates: true
+kubeadm_kubelet_eviction_hard:
+  memory.available: "100Mi"
+  nodefs.available: "10%"
+  nodefs.inodesFree: "5%"
+kubeadm_kube_proxy_config: {}
+
+# ==============================================================================
+# Join Configuration Extras
+# ==============================================================================
+kubeadm_join_timeout: "5m0s"
+kubeadm_join_token_ttl: "2h"
+kubeadm_join_patches: {}
+
+# ==============================================================================
+# System & Paths
+# ==============================================================================
+kubeadm_container_runtime_endpoint: "unix:///run/containerd/containerd.sock"
+kubeadm_config_dir: "/etc/kubernetes"
+kubeadm_kubeconfig_path: "/etc/kubernetes/admin.conf"
+kubeadm_kubeconfig_export_mode: "node_only"
+kubeadm_kubeconfig_dest: "~/.kube/config"
+kubeadm_api_endpoint_for_kubeconfig: ""
+kubeadm_disable_swap: true  # Установите в true, если хотите, чтобы роль отключала swap автоматически
+
+# ==============================================================================
+# Cleanup & Upgrade
+# ==============================================================================
+kubeadm_cleanup: false
+kubeadm_cleanup_full: false
+kubeadm_confirm_cleanup: false
+kubeadm_cleanup_etcd: false
+kubeadm_upgrade: false
+kubeadm_store_join_command: false

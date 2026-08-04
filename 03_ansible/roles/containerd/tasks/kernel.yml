@@ -1,0 +1,38 @@
+---
+- name: Load required kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ containerd_kernel_modules }}"
+
+- name: Persist kernel modules across reboots
+  ansible.builtin.template:
+    src: modules-load.d/containerd.conf.j2
+    dest: /etc/modules-load.d/containerd.conf
+    mode: '0644'
+
+- name: Verify kernel modules are loaded via /sys/module (native Ansible)
+  ansible.builtin.stat:
+    path: "/sys/module/{{ item }}"
+  register: _module_stats
+  loop: "{{ containerd_kernel_modules }}"
+
+- name: Assert kernel modules are loaded
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+    fail_msg: "Kernel module {{ item.item }} is not loaded after modprobe."
+    quiet: true
+  loop: "{{ _module_stats.results }}"
+
+- name: Configure sysctl parameters (write to file, apply via handler)
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: false
+    sysctl_set: true
+    sysctl_file: /etc/sysctl.d/99-containerd.conf
+  loop: "{{ containerd_sysctl_params | dict2items }}"
+  when: containerd_manage_sysctl | bool
+  notify: Reload sysctl

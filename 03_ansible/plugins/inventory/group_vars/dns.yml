@@ -1,0 +1,89 @@
+---
+# === Настройки DNS-сервера ===
+dns_forwarders:
+  - 8.8.8.8
+  - 8.8.4.4
+
+dns_allow_query:
+  - localhost
+  - 10.0.10.0/24
+  - 192.168.100.0/24
+
+dns_allow_recursion:
+  - localhost
+  - 10.0.10.0/24
+  - 192.168.100.0/24
+
+dns_listen:
+  - localhost
+  - 10.0.10.7
+  - 192.168.100.7
+
+dns_recursion_test_domain: "example.com"
+
+# Переменная для валидации работы DNS через dig (используется в validate.yml)
+dns_validation_record: "jenkins-prod-01"
+
+# === Данные зоны local.lab ===
+dns_domain: "local.lab"
+dns_reverse_zone: "100.168.192.in-addr.arpa"
+dns_reverse_zone_file: "db.192.168.100"
+
+# dns_zone_serial УДАЛЕН отсюда. 
+# Теперь он автоматически генерируется ролью как YYYYMMDD01 на основе ansible_date_time.
+
+dns_records_a:
+  - name: jumphost-prod-01
+    ip: 192.168.100.5
+  - name: gateway-prod-01
+    ip: 192.168.100.6
+  - name: dns-server
+    ip: 192.168.100.7
+  - name: lb-api-01
+    ip: 192.168.100.8
+  - name: lb-ingress-1
+    ip: 192.168.100.9
+  - name: jenkins-prod-01
+    ip: 192.168.100.30
+  - name: sonarqube-prod-01
+    ip: 192.168.100.31
+  - name: nexus-prod-01
+    ip: 192.168.100.32
+  - name: harbor-prod-01
+    ip: 192.168.100.33
+  - name: monitoring-prod-01
+    ip: 192.168.100.40
+  - name: master-k8s-prod-01
+    ip: 192.168.100.20
+  - name: worker-k8s-prod-01
+    ip: 192.168.100.21
+  - name: worker-k8s-prod-02
+    ip: 192.168.100.22
+  - name: rke2-ingress
+    ip: 192.168.100.101
+
+dns_records_cname:
+  - name: sonar
+    target: sonarqube
+  - name: prometheus
+    target: monitoring
+  - name: grafana
+    target: monitoring
+
+firewall_enabled: true
+firewall_rules:
+
+- rule: allow
+  port: 53
+  proto: tcp
+
+- rule: allow
+  port: 53
+  proto: udp
+
+- rule: allow
+  port: 953
+  proto: tcp
+
+resolver_target_interface: "eth1"
+

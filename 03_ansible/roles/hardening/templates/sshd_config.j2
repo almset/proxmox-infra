@@ -1,0 +1,39 @@
+# Ansible managed
+# SSH Hardening Configuration
+{% set allow_users = hardening_ssh_allow_users | map('trim') | reject('equalto', '') | list %}
+{% set allow_groups = hardening_ssh_allow_groups | map('trim') | reject('equalto', '') | list %}
+{% set deny_users = hardening_ssh_deny_users | map('trim') | reject('equalto', '') | list %}
+{% set deny_groups = hardening_ssh_deny_groups | map('trim') | reject('equalto', '') | list %}
+
+PermitRootLogin {{ hardening_ssh_permit_root_login }}
+PasswordAuthentication {{ hardening_ssh_password_authentication }}
+PubkeyAuthentication {{ hardening_ssh_pubkey_authentication }}
+X11Forwarding {{ hardening_ssh_x11_forwarding }}
+ClientAliveInterval {{ hardening_ssh_client_alive_interval }}
+ClientAliveCountMax {{ hardening_ssh_client_alive_count_max }}
+MaxAuthTries {{ hardening_ssh_max_auth_tries }}
+PermitEmptyPasswords {{ hardening_ssh_permit_empty_passwords }}
+ChallengeResponseAuthentication {{ hardening_ssh_challenge_response_authentication }}
+UsePAM {{ hardening_ssh_use_pam }}
+UseDNS {{ hardening_ssh_use_dns }}
+AllowAgentForwarding {{ hardening_ssh_allow_agent_forwarding }}
+AllowTcpForwarding {{ hardening_ssh_allow_tcp_forwarding }}
+GatewayPorts {{ hardening_ssh_gateway_ports }}
+PrintMotd {{ hardening_ssh_print_motd }}
+PrintLastLog {{ hardening_ssh_print_last_log }}
+TCPKeepAlive {{ hardening_ssh_tcp_keep_alive }}
+Compression {{ hardening_ssh_compression }}
+LoginGraceTime {{ hardening_ssh_login_grace_time }}
+
+{% if allow_users | length > 0 %}
+AllowUsers {{ allow_users | join(' ') }}
+{% endif %}
+{% if allow_groups | length > 0 %}
+AllowGroups {{ allow_groups | join(' ') }}
+{% endif %}
+{% if deny_users | length > 0 %}
+DenyUsers {{ deny_users | join(' ') }}
+{% endif %}
+{% if deny_groups | length > 0 %}
+DenyGroups {{ deny_groups | join(' ') }}
+{% endif %}

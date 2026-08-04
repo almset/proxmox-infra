@@ -1,0 +1,74 @@
+---
+- name: Install prerequisites and update cache
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Assert Docker GPG key exists if key management is delegated
+  ansible.builtin.stat:
+    path: /etc/apt/keyrings/docker.asc
+  register: _gpg_key_stat
+  when:
+    - containerd_manage_repository | bool
+    - not containerd_manage_gpg_key | bool
+
+- name: Fail if delegated GPG key is missing
+  ansible.builtin.assert:
+    that:
+      - _gpg_key_stat.stat.exists
+    fail_msg: >
+      Docker GPG key (/etc/apt/keyrings/docker.asc) is missing. 
+      Set containerd_manage_gpg_key: true or ensure the key is deployed by another role (e.g., base).
+    quiet: true
+  when:
+    - containerd_manage_repository | bool
+    - not containerd_manage_gpg_key | bool
+
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  when: containerd_manage_gpg_key | bool
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    force: false
+    checksum: >-
+      {{ containerd_docker_gpg_checksum
+         if containerd_docker_gpg_checksum | length > 0
+         else omit }}
+  when: containerd_manage_gpg_key | bool
+
+- name: Add Docker repository (deb822 format)
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: deb
+    uris: "{{ containerd_repository_url }}"
+    suites: "{{ ansible_distribution_release }}"
+    components: stable
+    architectures: "{{ containerd_arch_map[ansible_architecture] | default('amd64') }}"
+    signed_by: /etc/apt/keyrings/docker.asc
+    state: present
+  register: _repo_result
+  when: containerd_manage_repository | bool
+
+- name: Update apt cache (only if repository was added/changed)
+  ansible.builtin.apt:
+    update_cache: true
+  when:
+    - _repo_result is defined
+    - _repo_result is changed
+
+- name: Install containerd.io
+  ansible.builtin.apt:
+    name: "containerd.io{% if containerd_version != '' %}={{ containerd_version }}{% endif %}"
+    state: present
+  notify: Restart containerd

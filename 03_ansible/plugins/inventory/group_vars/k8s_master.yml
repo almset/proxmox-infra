@@ -1,0 +1,57 @@
+---
+# Роль ноды
+rke2_type: server
+
+# Имя ноды в Kubernetes (берем из инвентаря, чтобы не было пустой строки)
+rke2_node_name: "{{ inventory_hostname }}"
+
+# Токен кластера (должен совпадать на всех нодах)
+# rke2_token: "{{ vault_rke2_token }}"
+
+# Сетевые настройки
+rke2_cluster_cidr: "10.42.0.0/16"
+rke2_service_cidr: "10.43.0.0/16"
+rke2_cni: calico
+
+# Для генерации корректного kubeconfig (укажите реальный IP или DNS мастера/LB)
+rke2_api_endpoint: "192.168.100.20"  # <-- Замените на реальный IP мастера
+
+# Экспорт kubeconfig на Ansible-контроллер
+rke2_kubeconfig_export_mode: controller
+rke2_kubeconfig_dest: "~/.kube/config"
+
+# Отключаем встроенный ingress, чтобы поставить свой через Helm позже (рекомендуется)
+rke2_disable:
+  - rke2-ingress-nginx
+
+# Токен
+rke2_token: "f603132773c1f9e9d4c8cb3033ca0d774309d2b6ee4462a36de7196379afded3"
+
+# Firewall
+firewall_enabled: true
+firewall_rules:
+
+- rule: allow
+  port: 6443
+  proto: tcp
+
+- rule: allow
+  port: 9345
+  proto: tcp
+
+- rule: allow
+  port: 10250
+  proto: tcp
+
+- rule: allow
+  port: 2379:2380
+  proto: tcp
+
+- rule: allow
+  port: 30000:32767
+  proto: tcp
+
+# for Calico
+- rule: allow
+  port:  5473
+  proto: tcp

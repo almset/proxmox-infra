@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  role_name: kubeadm
+  author: Almas
+  description: Production-ready Kubernetes installation via kubeadm
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - kubernetes
+    - kubeadm
+    - k8s
+    - container
+dependencies: []

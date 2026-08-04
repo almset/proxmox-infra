@@ -1,0 +1,64 @@
+---
+# ==============================================================================
+# Step 1: Verify binary existence and version BEFORE any config generation
+# Single command acts as both existence check and version extraction.
+# ==============================================================================
+- name: Get containerd version (also verifies binary existence)
+  ansible.builtin.command:
+    cmd: containerd --version
+  register: _containerd_version_out
+  changed_when: false
+  failed_when: _containerd_version_out.rc != 0
+
+- name: Extract containerd semantic version
+  ansible.builtin.set_fact:
+    _ctr_semver: "{{ _containerd_version_out.stdout | regex_search('\\d+\\.\\d+\\.\\d+') }}"
+
+- name: Assert containerd version is 2.2 or higher
+  ansible.builtin.assert:
+    that:
+      - _ctr_semver is not none
+      - _ctr_semver is version('2.2', '>=')
+    fail_msg: >
+      This role requires containerd 2.2 or higher.
+      Detected version: {{ _ctr_semver | default('unknown') }}.
+      Please ensure containerd is installed and pin containerd_version to a 2.2+ package (e.g., '2.2.0-1').
+    quiet: true
+
+# ==============================================================================
+# Step 2: Detect legacy/incompatible configuration
+# ==============================================================================
+- name: Create containerd configuration directory
+  ansible.builtin.file:
+    path: "{{ containerd_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Check if main config.toml exists
+  ansible.builtin.stat:
+    path: "{{ containerd_config_dir }}/config.toml"
+  register: _config_stat
+
+- name: Read existing containerd configuration (if exists)
+  ansible.builtin.slurp:
+    src: "{{ containerd_config_dir }}/config.toml"
+  register: _config_slurp
+  when: _config_stat.stat.exists
+
+- name: Determine if main config regeneration is needed
+  ansible.builtin.set_fact:
+    _needs_regeneration: >-
+      {{
+        (containerd_regenerate_config | bool) or
+        (not _config_stat.stat.exists) or
+        (_config_stat.stat.exists and (
+          not ((_config_slurp.content | b64decode) is search('version\\s*=\\s*3\\b')) or
+          ((_config_slurp.content | b64decode) is search('disabled_plugins\\s*=\\s*\\[[^\\]]*"cri"[^\\]]*\\]'))
+        ))
+      }}
+
+- name: Remove legacy/incompatible main config
+  ansible.builtin.file:
+    path: "{{ containerd_config_dir }}/config.toml"
+    state: absent
+  when: _needs_regeneration | bool

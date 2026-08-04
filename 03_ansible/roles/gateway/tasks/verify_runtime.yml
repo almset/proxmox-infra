@@ -1,0 +1,77 @@
+---
+- name: Verify IP forwarding is active
+  ansible.builtin.command: sysctl -n net.ipv4.ip_forward
+  register: gateway_forwarding_verify
+  changed_when: false
+  when: gateway_manage_forwarding | bool
+
+- name: Assert IP forwarding is enabled
+  ansible.builtin.assert:
+    that:
+      - gateway_forwarding_verify.stdout == '1'
+    fail_msg: "IP forwarding is not enabled in kernel"
+  when: gateway_manage_forwarding | bool
+
+- name: Check FORWARD chain policy is DROP
+  ansible.builtin.command:
+    cmd: iptables -S FORWARD
+  register: gateway_forward_policy
+  changed_when: false
+
+- name: Assert FORWARD policy is DROP
+  ansible.builtin.assert:
+    that:
+      - "'-P FORWARD DROP' in gateway_forward_policy.stdout"
+    fail_msg: "FORWARD chain policy is not DROP"
+
+- name: Check MASQUERADE rule in POSTROUTING
+  ansible.builtin.command:
+    cmd: >-
+      iptables -t nat -C POSTROUTING
+      -s {{ gateway_internal_network }}
+      -o {{ gateway_external_interface }}
+      -j MASQUERADE
+  register: gateway_nat_rule_check
+  changed_when: false
+  failed_when: gateway_nat_rule_check.rc != 0
+  when: gateway_nat_enabled | bool
+
+- name: Check MASQUERADE rule is ABSENT when NAT disabled
+  ansible.builtin.command:
+    cmd: >-
+      iptables -t nat -C POSTROUTING
+      -s {{ gateway_internal_network }}
+      -o {{ gateway_external_interface }}
+      -j MASQUERADE
+  register: gateway_nat_rule_absent_check
+  changed_when: false
+  failed_when: gateway_nat_rule_absent_check.rc == 0
+  when: not (gateway_nat_enabled | bool)
+
+- name: Check FORWARD rule for internal network
+  ansible.builtin.command:
+    cmd: >-
+      iptables -C FORWARD
+      -i {{ gateway_internal_interface }}
+      -o {{ gateway_external_interface }}
+      -s {{ gateway_internal_network }}
+      -m conntrack --ctstate NEW
+      -j ACCEPT
+  register: gateway_forward_rule_check
+  changed_when: false
+  failed_when: gateway_forward_rule_check.rc != 0
+
+- name: Check ESTABLISHED,RELATED rule
+  ansible.builtin.command:
+    cmd: iptables -C FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+  register: gateway_established_rule_check
+  changed_when: false
+  failed_when: gateway_established_rule_check.rc != 0
+
+- name: Check LOG rule when logging enabled
+  ansible.builtin.command:
+    cmd: 'iptables -C FORWARD -j LOG --log-prefix "IPTables-Dropped: " --log-level 4'
+  register: gateway_log_rule_check
+  changed_when: false
+  failed_when: gateway_log_rule_check.rc != 0
+  when: gateway_enable_logging | bool

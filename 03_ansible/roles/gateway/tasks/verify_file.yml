@@ -1,0 +1,28 @@
+---
+- name: Check rules file exists with correct permissions
+  ansible.builtin.stat:
+    path: /etc/iptables/rules.v4
+  register: gateway_rules_file_stat
+
+- name: Assert rules file permissions
+  ansible.builtin.assert:
+    that:
+      - gateway_rules_file_stat.stat.exists
+      - gateway_rules_file_stat.stat.mode == '0600'
+      - gateway_rules_file_stat.stat.pw_name == 'root'
+      - gateway_rules_file_stat.stat.gr_name == 'root'
+    fail_msg: "Rules file has incorrect permissions or ownership"
+
+- name: Check netfilter-persistent service is active
+  ansible.builtin.command:
+    cmd: systemctl is-active netfilter-persistent
+  register: gateway_persistent_service_status
+  changed_when: false
+  failed_when: gateway_persistent_service_status.stdout != 'active'
+
+- name: Check netfilter-persistent service is enabled
+  ansible.builtin.command:
+    cmd: systemctl is-enabled netfilter-persistent
+  register: gateway_persistent_service_enabled
+  changed_when: false
+  failed_when: gateway_persistent_service_enabled.stdout != 'enabled'

@@ -1,0 +1,25 @@
+---
+- name: Include preflight checks
+  ansible.builtin.import_tasks: preflight.yml
+  tags:
+    - fail2ban
+    - fail2ban_preflight
+
+- name: Include fail2ban installation
+  ansible.builtin.import_tasks: install.yml
+  tags:
+    - fail2ban
+    - fail2ban_install
+
+- name: Include fail2ban configuration
+  ansible.builtin.import_tasks: configure.yml
+  tags:
+    - fail2ban
+    - fail2ban_config
+
+- name: Include cleanup of unmanaged jails
+  ansible.builtin.import_tasks: cleanup.yml
+  when: fail2ban_cleanup_enabled | bool
+  tags:
+    - fail2ban
+    - fail2ban_cleanup

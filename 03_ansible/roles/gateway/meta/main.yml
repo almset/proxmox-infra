@@ -1,0 +1,27 @@
+---
+galaxy_info:
+  role_name: gateway
+  author: Almas
+  description: Configure Linux gateway with NAT and IP forwarding using iptables-restore
+  license: MIT
+  min_ansible_version: "2.14"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - gateway
+    - nat
+    - iptables
+    - firewall
+    - networking
+    - netfilter
+
+dependencies: []

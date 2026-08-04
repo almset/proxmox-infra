@@ -1,0 +1,142 @@
+# Managed by Ansible - rke2 role
+
+{% if rke2_token | length > 0 %}
+token: "{{ rke2_token }}"
+{% endif %}
+
+{% if rke2_server_url | length > 0 %}
+server: "{{ rke2_server_url }}"
+{% endif %}
+
+node-name: "{{ rke2_node_name | default(ansible_hostname, true) }}"
+
+#bind-address: "0.0.0.0"
+
+cluster-cidr: "{{ rke2_cluster_cidr }}"
+service-cidr: "{{ rke2_service_cidr }}"
+cluster-dns: "{{ rke2_cluster_dns }}"
+
+tls-san:
+  - master-k8s-prod-01
+  - 127.0.0.1
+  - localhost
+  - 192.168.100.20
+  - master-k8s-prod-01.local.lab  # изменить для server-1
+  - worker-k8s-prod-01.local.lab  # изменить для worker-1
+  - worker-k8s-prod-02.local.lab  # изменить для worker-2
+  - 192.168.100.21   # изменить для server-3
+  - 192.168.100.22   # изменить для server-3
+
+cni:
+  - "{{ rke2_cni }}"
+
+data-dir: "{{ rke2_data_dir }}"
+write-kubeconfig-mode: "{{ rke2_write_kubeconfig_mode }}"
+protect-kernel-defaults: {{ rke2_protect_kernel_defaults | lower }}
+selinux: {{ rke2_selinux | lower }}
+
+{% if rke2_node_ip | length > 0 %}
+node-ip: "{{ rke2_node_ip }}"
+{% endif %}
+
+{% if rke2_node_external_ip | length > 0 %}
+node-external-ip: "{{ rke2_node_external_ip }}"
+{% endif %}
+
+{% if rke2_resolv_conf | length > 0 %}
+resolv-conf: "{{ rke2_resolv_conf }}"
+{% endif %}
+
+{% if rke2_snapshotter | length > 0 %}
+snapshotter: "{{ rke2_snapshotter }}"
+{% endif %}
+
+{% if rke2_cloud_provider_name | length > 0 %}
+cloud-provider-name: "{{ rke2_cloud_provider_name }}"
+{% endif %}
+
+{% if rke2_disable_kube_proxy | bool %}
+disable-kube-proxy: true
+{% endif %}
+
+{% if rke2_system_default_registry | length > 0 %}
+system-default-registry: "{{ rke2_system_default_registry }}"
+{% endif %}
+
+{% if rke2_tls_san | length > 0 %}
+tls-san:
+{% for san in rke2_tls_san %}
+  - "{{ san }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_disable | length > 0 %}
+disable:
+{% for component in rke2_disable %}
+  - "{{ component }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_node_labels | length > 0 %}
+node-label:
+{% for label in rke2_node_labels %}
+  - "{{ label }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_node_taints | length > 0 %}
+node-taint:
+{% for taint in rke2_node_taints %}
+  - "{{ taint }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_kubelet_args | length > 0 %}
+kubelet-arg:
+{% for arg in rke2_kubelet_args %}
+  - "{{ arg }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_apiserver_args | length > 0 %}
+kube-apiserver-arg:
+{% for arg in rke2_apiserver_args %}
+  - "{{ arg }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_scheduler_args | length > 0 %}
+kube-scheduler-arg:
+{% for arg in rke2_scheduler_args %}
+  - "{{ arg }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_controller_manager_args | length > 0 %}
+kube-controller-manager-arg:
+{% for arg in rke2_controller_manager_args %}
+  - "{{ arg }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_etcd_args | length > 0 %}
+etcd-arg:
+{% for arg in rke2_etcd_args %}
+  - "{{ arg }}"
+{% endfor %}
+{% endif %}
+
+{% if rke2_kubelet_extra_env | length > 0 %}
+kubelet-extra-env:
+{% for key, value in rke2_kubelet_extra_env.items() %}
+  - "{{ key }}={{ value }}"
+{% endfor %}
+{% endif %}
+
+etcd-snapshot-schedule-cron: "{{ rke2_etcd_snapshot_schedule_cron }}"
+etcd-snapshot-retention: {{ rke2_etcd_snapshot_retention }}
+etcd-snapshot-compression: {{ rke2_etcd_snapshot_compression | lower }}
+
+{% if rke2_etcd_snapshot_dir | length > 0 %}
+etcd-snapshot-dir: "{{ rke2_etcd_snapshot_dir }}"
+{% endif %}

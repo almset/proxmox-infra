@@ -1,0 +1,16 @@
+---
+- name: Verify OS
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Debian"
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_version is version('22.04', '>=')
+    fail_msg: "Role supports Ubuntu 22.04+ only."
+    success_msg: "OS verification passed."
+
+- name: Verify systemd
+  ansible.builtin.assert:
+    that:
+      - ansible_service_mgr == "systemd"
+    fail_msg: "Role requires systemd as the service manager."
+    success_msg: "Systemd verification passed."

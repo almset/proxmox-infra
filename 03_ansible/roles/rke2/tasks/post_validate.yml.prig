@@ -1,0 +1,50 @@
+---
+- name: Post-installation validation
+  block:
+    - name: Verify control plane health (readyz)
+      ansible.builtin.command:
+        cmd: "{{ rke2_kubectl_cmd }} get --raw='/readyz'"
+      register: _readyz
+      changed_when: false
+      failed_when: "'ok' not in _readyz.stdout"
+
+    - name: Verify no nodes are in NotReady state
+      ansible.builtin.command:
+        cmd: "{{ rke2_kubectl_cmd }} get nodes --no-headers"
+      register: _nodes_status
+      changed_when: false
+      failed_when: "'NotReady' in _nodes_status.stdout"
+
+#- name: Wait for critical system pods to be ready
+#  ansible.builtin.command:
+#    cmd: >-
+#      {{ rke2_kubectl_cmd }}
+#      wait --for=condition=Ready pods -n kube-system
+#      -l 'app.kubernetes.io/managed-by!=Helm'
+#      --timeout=120s
+#  register: _system_pods_ready
+#  changed_when: false
+#  failed_when: _system_pods_ready.rc != 0
+
+
+#    - name: Wait for 1all system components to be ready
+#      ansible.builtin.command:
+#        cmd: >-
+#          {{ rke2_kubectl_cmd }}
+#          wait --for=condition=Ready pods --all -n kube-system
+#          --timeout=120s
+#      register: _system_pods_ready
+#      changed_when: false
+#      failed_when: _system_pods_ready.rc != 0
+- name: Wait for core system components to be ready
+  ansible.builtin.command:
+    cmd: >-
+      {{ rke2_kubectl_cmd }}
+      wait --for=condition=Ready pods -n kube-system
+      -l 'k8s-app in (kube-dns, metrics-server, calico-node)'
+      --timeout=120s
+  register: _system_pods_ready
+  changed_when: false
+  failed_when: _system_pods_ready.rc != 0
+
+  when: not ansible_check_mode

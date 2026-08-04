@@ -1,0 +1,22 @@
+---
+- name: Assert supported OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Debian"
+    fail_msg: "This role supports only Debian-based systems."
+    quiet: true
+
+- name: Assert supported distribution
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_major_version | int >= 22
+    fail_msg: "This role supports only Ubuntu 22.04+ (optimized for 24.04+ with containerd 2.2+)."
+    quiet: true
+
+- name: Assert systemd is the init system
+  ansible.builtin.assert:
+    that:
+      - ansible_service_mgr == "systemd"
+    fail_msg: "This role requires systemd as the init system, got: {{ ansible_service_mgr }}."
+    quiet: true

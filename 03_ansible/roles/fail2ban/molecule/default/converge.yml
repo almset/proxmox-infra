@@ -1,0 +1,16 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  tasks:
+    - name: "Include fail2ban role"
+      ansible.builtin.include_role:
+        name: fail2ban
+      vars:
+        fail2ban_extra_jails:
+          - name: nginx-http-auth
+            enabled: true
+            port: http,https
+            logpath: /var/log/nginx/error.log
+            maxretry: 3
+            bantime: 7200

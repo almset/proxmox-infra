@@ -1,0 +1,248 @@
+---
+argument_specs:
+  main:
+    short_description: Security hardening for Ubuntu
+    description: Manages SSH, sudo, and sysctl security parameters.
+    options:
+      # Component toggles
+      hardening_manage_ssh:
+        type: bool
+        default: true
+        description: Whether to manage SSH configuration.
+      hardening_manage_sudo:
+        type: bool
+        default: true
+        description: Whether to manage sudo configuration.
+      hardening_manage_sysctl:
+        type: bool
+        default: true
+        description: Whether to manage sysctl parameters.
+
+      # Service names
+      hardening_ssh_service_name:
+        type: str
+        default: ssh
+        description: Name of the SSH service.
+
+      # SSH hardening
+      hardening_ssh_permit_root_login:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+          - "prohibit-password"
+          - "forced-commands-only"
+        description: Whether to allow root login.
+      hardening_ssh_password_authentication:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to allow password authentication.
+      hardening_ssh_pubkey_authentication:
+        type: str
+        default: "yes"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to allow public key authentication.
+      hardening_ssh_x11_forwarding:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to allow X11 forwarding.
+      hardening_ssh_client_alive_interval:
+        type: int
+        default: 300
+        description: Client alive interval in seconds.
+      hardening_ssh_client_alive_count_max:
+        type: int
+        default: 3
+        description: Maximum number of client alive messages.
+      hardening_ssh_max_auth_tries:
+        type: int
+        default: 4
+        description: Maximum authentication attempts.
+      hardening_ssh_permit_empty_passwords:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to allow empty passwords.
+      hardening_ssh_challenge_response_authentication:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to allow challenge-response authentication.
+      hardening_ssh_use_pam:
+        type: str
+        default: "yes"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to use PAM.
+      hardening_ssh_use_dns:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to use DNS lookup.
+      hardening_ssh_allow_agent_forwarding:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to allow agent forwarding.
+      hardening_ssh_allow_tcp_forwarding:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to allow TCP forwarding.
+      hardening_ssh_gateway_ports:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to allow gateway ports.
+      hardening_ssh_print_motd:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to print MOTD.
+      hardening_ssh_print_last_log:
+        type: str
+        default: "yes"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to print last login.
+      hardening_ssh_tcp_keep_alive:
+        type: str
+        default: "yes"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to enable TCP keep-alive.
+      hardening_ssh_compression:
+        type: str
+        default: "no"
+        choices:
+          - "yes"
+          - "no"
+        description: Whether to enable compression.
+      hardening_ssh_login_grace_time:
+        type: str
+        default: "60s"
+        description: >
+          Time allowed for successful authentication.
+          Accepts seconds (30, 30s) or minutes (1m, 2m).
+      hardening_ssh_allow_users:
+        type: list
+        elements: str
+        default: []
+        description: List of users allowed to log in.
+      hardening_ssh_allow_groups:
+        type: list
+        elements: str
+        default: []
+        description: List of groups allowed to log in.
+      hardening_ssh_deny_users:
+        type: list
+        elements: str
+        default: []
+        description: List of users denied from logging in.
+      hardening_ssh_deny_groups:
+        type: list
+        elements: str
+        default: []
+        description: List of groups denied from logging in.
+
+      # Sudo configuration
+      hardening_sudo_group:
+        type: str
+        default: sudo
+        description: Group allowed to use sudo.
+      hardening_sudo_require_password:
+        type: bool
+        default: true
+        description: Whether to require password for sudo.
+      hardening_sudo_timestamp_timeout:
+        type: int
+        default: 15
+        description: Sudo timestamp timeout in minutes.
+      hardening_sudo_logfile:
+        type: str
+        default: ""
+        description: Path to sudo log file (empty = use syslog/journald).
+      hardening_sudo_env_reset:
+        type: bool
+        default: true
+        description: Whether to reset environment variables.
+      hardening_sudo_use_pty:
+        type: bool
+        default: true
+        description: Whether to require PTY for sudo.
+      hardening_sudo_lecture:
+        type: str
+        default: "never"
+        choices:
+          - never
+          - once
+          - always
+        description: Sudo lecture policy.
+
+      # Sudo configuration extendet
+      hardening_sudo_manage_defaults:
+        type: bool
+        default: true
+        description: Whether to manage sudo Defaults (10-hardening-defaults).
+
+      hardening_sudo_manage_ansible:
+        type: bool
+        default: true
+        description: Whether to manage ansible user sudo access (90-hardening-ansible).
+
+      hardening_sudo_manage_admins:
+        type: bool
+        default: true
+        description: Whether to manage admin group sudo access (91-hardening-admins).
+
+      hardening_sudo_ansible_user:
+        type: str
+        default: "ansible"
+        description: Username for Ansible automation.
+
+      hardening_sudo_ansible_nopasswd:
+        type: bool
+        default: true
+        description: Whether Ansible user requires password for sudo.
+      # Sysctl extra parameters
+      hardening_sysctl_extra_params:
+        type: list
+        elements: dict
+        default: []
+        description: Additional sysctl parameters (must have unique names).
+        options:
+          name:
+            type: str
+            required: true
+            description: Sysctl parameter name.
+          value:
+            type: raw
+            required: true
+            description: Sysctl parameter value.
+

@@ -1,0 +1,49 @@
+---
+# Managed by Ansible - kubeadm role
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+
+localAPIEndpoint:
+  advertiseAddress: "{{ ansible_default_ipv4.address }}"
+  bindPort: 6443
+
+{% if not kubeadm_install_kube_proxy | bool %}
+skipPhases:
+  - addon/kube-proxy
+{% endif %}
+
+nodeRegistration:
+  criSocket: "{{ kubeadm_container_runtime_endpoint }}"
+  name: "{{ kubeadm_node_name | default(ansible_hostname, true) }}"
+
+{% if kubeadm_node_taints | length > 0 %}
+  taints:
+{% for taint in kubeadm_node_taints %}
+    - {{ taint }}
+{% endfor %}
+{% else %}
+  taints:
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+{% endif %}
+
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+
+kubernetesVersion: "v{{ kubernetes_version }}"
+clusterName: "{{ kubeadm_cluster_name }}"
+
+{% if kubeadm_image_repository %}
+imageRepository: "{{ kubeadm_image_repository }}"
+{% endif %}
+
+controlPlaneEndpoint: "{{ kubeadm_api_endpoint | default(ansible_default_ipv4.address, true) }}:6443"
+
+networking:
+  podSubnet: "{{ kubeadm_pod_network_cidr }}"
+  serviceSubnet: "{{ kubeadm_service_cidr }}"
+
+{% if kubeadm_dns_domain is defined %}
+  dnsDomain: "{{ kubeadm_dns_domain }}"
+{% endif %}

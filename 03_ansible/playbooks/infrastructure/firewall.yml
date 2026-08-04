@@ -1,0 +1,7 @@
+---
+- name: Configure Firewall (UFW)
+  hosts: linux
+  become: yes
+  
+  roles:
+    - role: firewall

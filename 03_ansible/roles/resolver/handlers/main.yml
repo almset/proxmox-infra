@@ -1,0 +1,14 @@
+---
+- name: Generate netplan to validate syntax before applying
+  ansible.builtin.command: netplan generate
+  listen: "reload network"
+  become: true
+  register: netplan_generate
+  changed_when: false
+  failed_when: netplan_generate.rc != 0
+
+- name: Apply netplan configuration
+  ansible.builtin.command: netplan apply
+  listen: "reload network"
+  become: true
+  changed_when: false

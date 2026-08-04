@@ -1,0 +1,38 @@
+---
+- name: Include preflight checks
+  ansible.builtin.import_tasks: preflight.yml
+  tags: [containerd, preflight]
+
+- name: Include variable validation
+  ansible.builtin.import_tasks: validate.yml
+  tags: [containerd, validate]
+
+- name: Include cleanup tasks
+  ansible.builtin.import_tasks: cleanup.yml
+  tags: [containerd, cleanup]
+
+- name: Include package installation tasks
+  ansible.builtin.import_tasks: packages.yml
+  tags: [containerd, packages]
+
+- name: Include kernel configuration tasks
+  ansible.builtin.import_tasks: kernel.yml
+  when: containerd_manage_kernel | bool
+  tags: [containerd, kernel]
+
+- name: Include configuration tasks
+  ansible.builtin.import_tasks: configuration.yml
+  tags: [containerd, configuration]
+
+- name: Include service management tasks
+  ansible.builtin.import_tasks: service.yml
+  tags: [containerd, service]
+
+# CRITICAL: Ensure all pending handlers are executed BEFORE post-installation validation.
+- name: Flush handlers to apply configuration changes
+  ansible.builtin.meta: flush_handlers
+  tags: [containerd, service, post_validate]
+
+- name: Include post-installation validation
+  ansible.builtin.import_tasks: post_validate.yml
+  tags: [containerd, post_validate]

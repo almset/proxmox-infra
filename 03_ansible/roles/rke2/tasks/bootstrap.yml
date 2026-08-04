@@ -1,0 +1,7 @@
+---
+- name: Assert token is provided for all nodes (Enterprise requirement)
+  ansible.builtin.assert:
+    that:
+      - rke2_token | length > 0
+    fail_msg: "rke2_token MUST be provided (e.g., via Ansible Vault or group_vars) for all nodes."
+    quiet: true

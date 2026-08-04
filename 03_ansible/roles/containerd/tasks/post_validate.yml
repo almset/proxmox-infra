@@ -1,0 +1,86 @@
+---
+- name: Post-installation validation
+  block:
+    - name: Get containerd service status
+      ansible.builtin.systemd:
+        name: containerd
+      register: _containerd_service
+
+    - name: Assert containerd service is active
+      ansible.builtin.assert:
+        that:
+          - _containerd_service.status.ActiveState == 'active'
+        fail_msg: "containerd service is not active."
+        quiet: true
+
+    - name: Assert requested version matches installed version
+      ansible.builtin.assert:
+        that:
+          - _ctr_semver == (containerd_version | regex_search('^\\d+\\.\\d+\\.\\d+'))
+        fail_msg: >
+          Installed version '{{ _ctr_semver }}' 
+          does not match requested '{{ containerd_version | regex_search('^\\d+\\.\\d+\\.\\d+') }}'.
+        quiet: true
+      when:
+        - containerd_version != ""
+        - (containerd_version | regex_search('^\\d+\\.\\d+\\.\\d+')) is not none
+
+    - name: Dump active containerd configuration
+      ansible.builtin.command:
+        cmd: containerd config dump
+      register: _config_dump
+      changed_when: false
+      failed_when: _config_dump.rc != 0
+
+    # Resilient regex: case-insensitive, handles 'SystemdCgroup' or 'systemd_cgroup'
+    - name: Assert SystemdCgroup is true in runtime configuration
+      ansible.builtin.assert:
+        that:
+          - _config_dump.stdout | regex_search('(?i)systemd[_-]?cgroup\\s*=\\s*true')
+        fail_msg: >
+          SystemdCgroup is not active in the running containerd configuration.
+          The drop-in override may not have been applied.
+        quiet: true
+
+    # Resilient regex: case-insensitive, handles optional quotes around the image name
+    - name: Assert sandbox image is correct in runtime configuration
+      ansible.builtin.assert:
+        that:
+          - _config_dump.stdout | regex_search('(?i)sandbox\\s*=\\s*["\']?' + containerd_sandbox_image + '["\']?')
+        fail_msg: >
+          Sandbox image '{{ containerd_sandbox_image }}' is not correctly applied
+          in the running containerd configuration.
+        quiet: true
+
+    # ==============================================================================
+    # Validate CRI plugin via line-by-line parsing (Resilient to 2.x naming variations)
+    # ==============================================================================
+    - name: Verify CRI plugin status
+      ansible.builtin.command:
+        cmd: ctr plugins ls
+      register: _ctr_plugins
+      changed_when: false
+      failed_when: _ctr_plugins.rc != 0
+
+    - name: Find ANY CRI plugin lines in output (covers .v1, .v1.runtime, .v1.images)
+      ansible.builtin.set_fact:
+        _cri_plugin_lines: "{{ _ctr_plugins.stdout_lines | select('search', 'io\\.containerd\\.cri') | list }}"
+
+    - name: Assert CRI plugin is present
+      ansible.builtin.assert:
+        that:
+          - _cri_plugin_lines | length > 0
+        fail_msg: >
+          CRI plugin (io.containerd.cri.*) is not loaded.
+          Check containerd version compatibility and ensure CRI is not disabled in config.
+        quiet: true
+
+    - name: Assert at least one CRI plugin is in 'ok' state
+      ansible.builtin.assert:
+        that:
+          - _cri_plugin_lines | select('search', '\\bok\\b') | list | length > 0
+        fail_msg: >
+          CRI plugin is not in 'ok' state.
+          Lines found: {{ _cri_plugin_lines | join('\n') }}
+        quiet: true
+  when: not ansible_check_mode

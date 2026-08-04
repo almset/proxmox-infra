@@ -1,0 +1,11 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  roles:
+    - role: firewall
+      vars:
+        firewall_rules:
+          - { rule: 'allow', port: '80', proto: 'tcp', comment: 'HTTP' }
+          - { rule: 'allow', port: '443', proto: 'tcp', comment: 'HTTPS' }
+          - { rule: 'allow', port: '53', proto: 'udp', comment: 'DNS' }

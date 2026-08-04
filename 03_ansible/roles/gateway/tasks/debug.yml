@@ -1,0 +1,15 @@
+---
+- name: Display verification summary
+  ansible.builtin.debug:
+    msg:
+      - "=== Gateway Verification Summary ==="
+#     - "Rules file syntax: {{ 'OK' if (gateway_rules_syntax_precheck.rc | default(1)) == 0 else ('FAILED' if gateway_rules_syntax_precheck is defined else 'NOT RUN') }}"
+      - "FORWARD policy:    {{ 'DROP' if '-P FORWARD DROP' in (gateway_forward_policy.stdout | default('')) else ('FAILED' if gateway_forward_policy is defined else 'NOT RUN') }}"
+      - "IP Forwarding:     {{ 'ENABLED' if (gateway_forwarding_verify.stdout | default('')) == '1' else ('DISABLED' if gateway_forwarding_verify is defined else 'SKIPPED') }}"
+      - "NAT MASQUERADE:    {{ 'PRESENT' if (gateway_nat_rule_check.rc | default(1)) == 0 else ('ABSENT (disabled)' if (gateway_nat_rule_absent_check.rc | default(1)) != 0 and not (gateway_nat_enabled | bool) else ('SKIPPED' if not (gateway_nat_enabled | bool) else 'FAILED')) }}"
+      - "FORWARD rule:      {{ 'PRESENT' if (gateway_forward_rule_check.rc | default(1)) == 0 else ('FAILED' if gateway_forward_rule_check is defined else 'NOT RUN') }}"
+      - "ESTABLISHED rule:  {{ 'PRESENT' if (gateway_established_rule_check.rc | default(1)) == 0 else ('FAILED' if gateway_established_rule_check is defined else 'NOT RUN') }}"
+      - "LOG rule:          {{ 'PRESENT' if (gateway_log_rule_check.rc | default(1)) == 0 else ('SKIPPED' if not (gateway_enable_logging | bool) else 'FAILED') }}"
+      - "Internal network:  {{ gateway_internal_network }}"
+      - "Internal iface:    {{ gateway_internal_interface }}"
+      - "External iface:    {{ gateway_external_interface }}"

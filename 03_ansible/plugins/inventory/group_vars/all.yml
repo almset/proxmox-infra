@@ -1,0 +1,13 @@
+ssh_private_key: /home/ubuntu/04_terragrunt/secrets/ansible_key
+
+ssh_common_args: >-
+  -o ProxyCommand="ssh
+  -o StrictHostKeyChecking=no
+  -o UserKnownHostsFile=/dev/null
+  -i /home/ubuntu/04_terragrunt/secrets/ansible_key
+  -W %h:%p
+  ansible@10.0.10.5"
+  -o StrictHostKeyChecking=no
+  -o UserKnownHostsFile=/dev/null
+
+

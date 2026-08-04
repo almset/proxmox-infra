@@ -1,0 +1,44 @@
+---
+# Service and Packages
+dns_service_name: named
+dns_packages:
+  - bind9
+  - bind9utils
+  - bind9-doc
+  - dnsutils
+
+# Zone configuration
+dns_domain: "local.lab"
+dns_reverse_zone: "100.168.192.in-addr.arpa"
+dns_reverse_zone_file: "db.192.168.100"
+
+# Динамический серийный номер в формате YYYYMMDDNN
+dns_zone_serial: "{{ ansible_date_time.date | regex_replace('-', '') }}01"
+
+# Primary Name Server (используется в SOA и NS записях)
+dns_primary_ns: "dns-server"
+
+# Network settings (строго универсальные значения по умолчанию)
+dns_forwarders:
+  - 8.8.8.8
+  - 8.8.4.4
+
+dns_allow_query:
+  - localhost
+
+dns_allow_recursion:
+  - localhost
+
+dns_listen:
+  - localhost
+
+# Recursion toggle
+dns_recursion_enabled: true
+dns_recursion_test_domain: "example.com"
+
+# Validation record (e.g., 'jenkins')
+dns_validation_record: ""
+
+# Records (populate via group_vars/dns.yml)
+dns_records_a: []
+dns_records_cname: []

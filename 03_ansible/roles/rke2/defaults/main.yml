@@ -1,0 +1,122 @@
+---
+# ==============================================================================
+# Installation & Air-Gap Support
+# ==============================================================================
+rke2_version: ""
+rke2_channel: "stable"
+rke2_install_script_url: "https://get.rke2.io"
+rke2_install_artifact_path: ""
+rke2_install_method: ""
+rke2_system_default_registry: ""
+
+# ==============================================================================
+# Node Role
+# ==============================================================================
+rke2_type: "server"
+
+# ==============================================================================
+# Cluster & Network
+# ==============================================================================
+rke2_token: ""
+rke2_server_url: ""
+rke2_cluster_cidr: "10.42.0.0/16"
+rke2_service_cidr: "10.43.0.0/16"
+rke2_cluster_dns: "10.43.0.10"
+rke2_cni: "calico"
+
+# ==============================================================================
+# Node Configuration
+# ==============================================================================
+rke2_node_name: ""
+rke2_node_labels: []
+rke2_node_taints: []
+rke2_node_ip: ""
+rke2_node_external_ip: ""
+rke2_tls_san: []
+rke2_disable: []
+
+# ==============================================================================
+# Kubernetes Component Arguments
+# ==============================================================================
+rke2_kubelet_args: []
+rke2_apiserver_args: []
+rke2_scheduler_args: []
+rke2_controller_manager_args: []
+rke2_etcd_args: []
+rke2_kubelet_extra_env: {}
+
+# ==============================================================================
+# Registries Configuration
+# ==============================================================================
+rke2_registries: {}
+
+# ==============================================================================
+# Custom Manifests
+# ==============================================================================
+rke2_deploy_manifests: false
+rke2_manifests_wait_enabled: true
+
+# ==============================================================================
+# System & Paths
+# ==============================================================================
+rke2_data_dir: "/var/lib/rancher/rke2"
+rke2_write_kubeconfig_mode: "0644"
+rke2_export_path: true
+rke2_protect_kernel_defaults: true
+rke2_selinux: false
+rke2_resolv_conf: ""
+rke2_snapshotter: ""
+
+# ==============================================================================
+# Cloud Provider
+# ==============================================================================
+rke2_cloud_provider_name: ""
+rke2_disable_kube_proxy: false
+
+# ==============================================================================
+# ETCD Snapshots
+# ==============================================================================
+rke2_etcd_snapshot_schedule_cron: "0 */12 * * *"
+rke2_etcd_snapshot_retention: 5
+rke2_etcd_snapshot_dir: ""
+rke2_etcd_snapshot_compression: true
+
+# ==============================================================================
+# Wait Components
+# ==============================================================================
+rke2_wait_components:
+  rke2-coredns:
+    namespace: kube-system
+    selector: k8s-app=kube-dns
+    kind: deployment
+  rke2-metrics-server:
+    namespace: kube-system
+    selector: k8s-app=rke2-metrics-server
+    kind: deployment
+  rke2-local-path-provisioner:
+    namespace: local-path-storage
+    selector: app=local-path-provisioner
+    kind: deployment
+  rke2-etcd:
+    namespace: kube-system
+    selector: component=etcd
+    kind: static-pod
+  rke2-kube-apiserver:
+    namespace: kube-system
+    selector: component=kube-apiserver
+    kind: static-pod
+
+# ==============================================================================
+# Kubeconfig
+# ==============================================================================
+rke2_api_endpoint: ""
+rke2_kubeconfig_export_mode: "node_only"
+rke2_kubeconfig_dest: "~/.kube/config"
+
+# ==============================================================================
+# Cleanup
+# ==============================================================================
+rke2_cleanup: false
+rke2_cleanup_packages: ["k3s", "k3s-rke2"]
+rke2_cleanup_autoremove: false
+rke2_cleanup_full: false

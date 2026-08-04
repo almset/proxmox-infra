@@ -1,0 +1,17 @@
+---
+- name: Ensure RKE2 configuration directory exists
+  ansible.builtin.file:
+    path: /etc/rancher/rke2
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Deploy RKE2 agent configuration
+  ansible.builtin.template:
+    src: rke2-agent-config.yaml.j2
+    dest: /etc/rancher/rke2/config.yaml
+    mode: '0600'
+    owner: root
+    group: root
+  notify: Restart rke2-agent

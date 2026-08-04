@@ -1,0 +1,12 @@
+---
+- name: Generate locale
+  community.general.locale_gen:
+    name: "{{ base_locale }}"
+    state: present
+
+- name: Ensure default locale is set in /etc/default/locale
+  lineinfile:
+    path: /etc/default/locale
+    regexp: '^LANG='
+    line: 'LANG={{ base_locale }}'
+    create: yes

@@ -1,0 +1,10 @@
+#!/bin/sh
+# Managed by Ansible
+
+echo "========================================================================"
+echo "  OS:      $(lsb_release -ds)"
+echo "  Kernel:  $(uname -r)"
+echo "  Env:     {{ base_motd_environment }}"
+echo "  Role:    {{ base_motd_role }}"
+echo "  Managed: Ansible"
+echo "========================================================================"

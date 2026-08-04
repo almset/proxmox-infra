@@ -1,0 +1,51 @@
+# Ansible managed
+# Sysctl Hardening Configuration
+
+# Network - Anti-spoofing
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# Network - ICMP
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+
+# Network - Redirects and source routing
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+net.ipv6.conf.all.accept_source_route = 0
+net.ipv6.conf.default.accept_source_route = 0
+
+# Network - SYN flood protection
+net.ipv4.tcp_syncookies = 1
+
+# Network - Logging
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.default.log_martians = 1
+
+# Kernel - ASLR and core dumps
+kernel.randomize_va_space = 2
+fs.suid_dumpable = 0
+
+# Kernel - Security
+kernel.core_uses_pid = 1
+kernel.kptr_restrict = 2
+kernel.dmesg_restrict = 1
+kernel.perf_event_paranoid = 3
+kernel.yama.ptrace_scope = 1
+
+# File system
+fs.protected_hardlinks = 1
+fs.protected_symlinks = 1
+fs.protected_fifos = 2
+fs.protected_regular = 2
+
+# Extra parameters
+{% for param in hardening_sysctl_extra_params %}
+{{ param.name | trim }} = {{ param.value }}
+{% endfor %}

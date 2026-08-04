@@ -1,0 +1,53 @@
+---
+# ============================================================
+# UFW default policies
+# ============================================================
+# Allowed values: allow, deny, reject
+firewall_ufw_default_input: deny
+firewall_ufw_default_output: allow
+firewall_ufw_default_forward: deny
+
+# Logging levels: on, off, low, medium, high, full
+firewall_ufw_logging: "on"
+
+# ============================================================
+# SSH access
+# ============================================================
+firewall_ufw_ssh_enabled: true
+firewall_ufw_ssh_port: 22
+
+# ============================================================
+# Firewall enabled option
+# ============================================================
+firewall_enabled: true
+
+# ============================================================
+# Extra rules
+# ============================================================
+# List of additional UFW rules.
+#
+# Port-based rules (open port to everyone):
+#   - { rule: 'allow', port: '80', proto: 'tcp', comment: 'HTTP' }
+#   - { rule: 'allow', port: '443', proto: 'tcp', comment: 'HTTPS' }
+#   - { rule: 'allow', port: '53', proto: 'udp', comment: 'DNS' }
+#   - { rule: 'allow', port: '30000:32767', proto: 'tcp', comment: 'NodePort' }
+#   - { rule: 'deny', port: '25', proto: 'tcp', comment: 'Block SMTP' }
+#
+# IP-based rules (open port to specific IP/subnet):
+#   - { rule: 'allow', from_ip: '10.0.0.0/8', to_port: '22', proto: 'tcp', comment: 'SSH from internal' }
+#   - { rule: 'allow', from_ip: '192.168.1.100', to_port: '3306', proto: 'tcp', comment: 'MySQL from specific IP' }
+#
+# Required fields per rule:
+#   - rule: 'allow' | 'deny' | 'reject' | 'limit'
+#   - port: <port> (for port-based) OR from_ip + to_port (for IP-based)
+# Optional fields:
+#   - proto: 'tcp' | 'udp' (default: tcp)
+#   - comment: string (default: 'Ansible managed')
+firewall_rules: []
+
+# ============================================================
+# Reset
+# ============================================================
+# Set to true to reset UFW to factory defaults before applying rules.
+# WARNING: This will remove all existing rules.
+firewall_ufw_reset: false

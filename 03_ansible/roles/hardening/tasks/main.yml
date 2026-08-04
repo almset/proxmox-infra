@@ -1,0 +1,20 @@
+---
+# 1. Preflight checks
+- name: Include preflight tasks
+  ansible.builtin.import_tasks: preflight.yml
+  tags: [hardening, preflight]
+
+# 2. SSH hardening
+- name: Include SSH hardening tasks
+  ansible.builtin.import_tasks: ssh.yml
+  tags: [hardening, ssh]
+
+# 3. Sudo configuration
+- name: Include sudo configuration tasks
+  ansible.builtin.import_tasks: sudo.yml
+  tags: [hardening, sudo]
+
+# 4. Sysctl security parameters
+- name: Include sysctl security tasks
+  ansible.builtin.import_tasks: sysctl.yml
+  tags: [hardening, sysctl]

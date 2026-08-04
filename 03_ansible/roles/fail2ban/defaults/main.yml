@@ -1,0 +1,60 @@
+---
+# ============================================================
+# fail2ban role — default variables
+# ============================================================
+
+# --- Service ---
+fail2ban_service_name: fail2ban
+fail2ban_service_state: started
+fail2ban_service_enabled: true
+fail2ban_manage_service: true
+
+# --- Packages ---
+fail2ban_packages:
+  - fail2ban
+
+# --- Global configuration (dictionary-based) ---
+fail2ban_default:
+  backend: auto
+  banaction: iptables-multiport
+  bantime: 3600
+  findtime: 600
+  maxretry: 5
+  bantime_increment: true
+  bantime_factor: 1
+  bantime_formula_enabled: true
+  bantime_formula: "ban.Time * (1.0 + banFactor*log(1+banCount))"
+  bantime_overalljails: true
+  ignoreip:
+    - 127.0.0.1/8
+    - ::1
+
+# --- SSH jail (dictionary) ---
+fail2ban_sshd:
+  enabled: true
+  port: ssh
+  logpath: /var/log/auth.log
+  maxretry: 5
+  bantime: 3600
+  findtime: 600
+
+# --- Recidive jail (persistent offenders) ---
+fail2ban_recidive:
+  enabled: true
+  banaction: "%(banaction_allports)s"
+  logpath: /var/log/fail2ban.log
+  maxretry: 3
+  bantime: 604800   # 1 week
+  findtime: 43200   # 12 hours
+
+# --- Extra jails (list of dicts) ---
+# Example:
+#   - name: nginx-http-auth
+#     enabled: true
+#     port: http,https
+#     logpath: /var/log/nginx/error.log
+#     maxretry: 5
+fail2ban_extra_jails: []
+
+# --- Cleanup (disabled by default for safety) ---
+fail2ban_cleanup_enabled: false

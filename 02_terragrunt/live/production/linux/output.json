@@ -1,0 +1,202 @@
+{
+  "inventory": {
+    "sensitive": false,
+    "type": [
+      "object",
+      {
+        "bastion-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ],
+        "dns-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ],
+        "haproxy-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ],
+        "jenkins-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ],
+        "master-k8s-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ],
+        "monitoring-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ],
+        "nexus-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ],
+        "router-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ],
+        "worker-k8s-prod-01": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ],
+        "worker-k8s-prod-02": [
+          "object",
+          {
+            "ansible_host": "string",
+            "environment": "string",
+            "management_ip": "string",
+            "platform": "string",
+            "role": "string",
+            "vm_id": "number"
+          }
+        ]
+      }
+    ],
+    "value": {
+      "bastion-prod-01": {
+        "ansible_host": "192.168.100.5",
+        "environment": "production",
+        "management_ip": "10.0.10.5",
+        "platform": "linux",
+        "role": "bastion",
+        "vm_id": 200
+      },
+      "dns-prod-01": {
+        "ansible_host": "192.168.100.7",
+        "environment": "production",
+        "management_ip": "10.0.10.7",
+        "platform": "linux",
+        "role": "dns",
+        "vm_id": 201
+      },
+      "haproxy-prod-01": {
+        "ansible_host": "192.168.100.100",
+        "environment": "production",
+        "management_ip": "10.0.10.8",
+        "platform": "linux",
+        "role": "haproxy",
+        "vm_id": 203
+      },
+      "jenkins-prod-01": {
+        "ansible_host": "192.168.100.30",
+        "environment": "production",
+        "management_ip": "192.168.100.30",
+        "platform": "linux",
+        "role": "jenkins",
+        "vm_id": 230
+      },
+      "master-k8s-prod-01": {
+        "ansible_host": "192.168.100.20",
+        "environment": "production",
+        "management_ip": "192.168.100.20",
+        "platform": "linux",
+        "role": "k8s-master",
+        "vm_id": 220
+      },
+      "monitoring-prod-01": {
+        "ansible_host": "192.168.100.40",
+        "environment": "production",
+        "management_ip": "192.168.100.40",
+        "platform": "linux",
+        "role": "monitoring",
+        "vm_id": 240
+      },
+      "nexus-prod-01": {
+        "ansible_host": "192.168.100.31",
+        "environment": "production",
+        "management_ip": "192.168.100.31",
+        "platform": "linux",
+        "role": "nexus",
+        "vm_id": 231
+      },
+      "router-prod-01": {
+        "ansible_host": "192.168.100.6",
+        "environment": "production",
+        "management_ip": "10.0.10.6",
+        "platform": "linux",
+        "role": "router",
+        "vm_id": 202
+      },
+      "worker-k8s-prod-01": {
+        "ansible_host": "192.168.100.21",
+        "environment": "production",
+        "management_ip": "192.168.100.21",
+        "platform": "linux",
+        "role": "k8s-worker",
+        "vm_id": 221
+      },
+      "worker-k8s-prod-02": {
+        "ansible_host": "192.168.100.22",
+        "environment": "production",
+        "management_ip": "192.168.100.22",
+        "platform": "linux",
+        "role": "k8s-worker",
+        "vm_id": 222
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+---
+- name: Gather passwd database
+  ansible.builtin.getent:
+    database: passwd
+
+- name: Assert that ansible_user exists
+  ansible.builtin.assert:
+    that:
+      - ansible_user in getent_passwd
+    fail_msg: "CRITICAL: User '{{ ansible_user }}' does not exist. Check Cloud-Init!"
+    success_msg: "User '{{ ansible_user }}' exists."

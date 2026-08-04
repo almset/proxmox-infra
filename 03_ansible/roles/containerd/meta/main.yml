@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  role_name: containerd
+  author: Almas
+  description: Production-ready containerd 2.2+ installation for Kubernetes
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - containerd
+    - kubernetes
+    - container
+    - runtime
+
+dependencies: []

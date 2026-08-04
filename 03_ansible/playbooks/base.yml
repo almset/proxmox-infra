@@ -1,0 +1,7 @@
+---
+- name: Configure base Linux hosts
+  hosts: linux
+  become: true
+
+  roles:
+    - base

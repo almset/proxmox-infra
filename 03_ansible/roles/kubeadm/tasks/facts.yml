@@ -1,0 +1,19 @@
+---
+- name: Compute basic kubeadm node facts
+  ansible.builtin.set_fact:
+    kubeadm_is_bootstrap: "{{ kubeadm_bootstrap | default(false) | bool }}"
+    kubeadm_is_control_plane: "{{ kubeadm_role == 'control-plane' }}"
+    kubeadm_is_worker: "{{ kubeadm_role == 'worker' }}"
+    kubeadm_kubectl_cmd: "kubectl --kubeconfig {{ kubeadm_kubeconfig_path }}"
+    kubeadm_resolved_api_endpoint: "{{ kubeadm_api_endpoint_for_kubeconfig | default(ansible_default_ipv4.address, true) }}"
+    _kubeadm_drain_cmd: >-
+      kubectl --kubeconfig {{ kubeadm_kubeconfig_path }}
+      drain {{ kubeadm_node_name | default(ansible_hostname) }}
+      --ignore-daemonsets --delete-emptydir-data --force
+    _kubeadm_uncordon_cmd: >-
+      kubectl --kubeconfig {{ kubeadm_kubeconfig_path }}
+      uncordon {{ kubeadm_node_name | default(ansible_hostname) }}
+
+- name: Compute derived kubeadm node facts
+  ansible.builtin.set_fact:
+    kubeadm_is_join_control_plane: "{{ kubeadm_is_control_plane | bool and not kubeadm_is_bootstrap | bool }}"

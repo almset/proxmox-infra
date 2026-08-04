@@ -1,0 +1,10 @@
+variable "vm_name" { type = string }
+variable "vm_config" { type = any }
+variable "ansible_user" { type = string }
+variable "ansible_ssh_public_key" { type = string }
+variable "template" { type = string }
+variable "proxmox_node" { type = string }
+variable "storage_ssd" { type = string }
+variable "storage_hdd" { type = string }
+variable "environment" { type = string }
+variable "cloud_init_id" { type = string }

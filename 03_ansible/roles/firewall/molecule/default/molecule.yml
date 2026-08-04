@@ -1,0 +1,19 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: ubuntu-22-firewall
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /lib/systemd/systemd
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    capabilities:
+      - NET_ADMIN
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

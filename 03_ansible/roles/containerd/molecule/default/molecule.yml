@@ -1,0 +1,22 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: ubuntu-24-containerd
+    image: geerlingguy/docker-ubuntu2404-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /lib/systemd/systemd
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+  playbooks:
+    converge: converge.yml
+verifier:
+  name: ansible

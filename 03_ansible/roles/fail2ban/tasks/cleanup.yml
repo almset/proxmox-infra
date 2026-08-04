@@ -1,0 +1,57 @@
+---
+# Cleanup only files managed by this role (prefix "10-").
+# Manual admin configs and package-provided files are left intact.
+
+- name: Build list of managed files
+  ansible.builtin.set_fact:
+    managed_files: >-
+      {{
+        ['/etc/fail2ban/jail.d/10-sshd.local']
+        +
+        (
+          fail2ban_extra_jails
+          | map(attribute='name')
+          | map('regex_replace', '^(.*)$', '/etc/fail2ban/jail.d/10-\\1.local')
+          | list
+        )
+      }}
+  tags:
+    - fail2ban
+    - fail2ban_cleanup
+
+- name: Find managed extra jail files
+  ansible.builtin.find:
+    paths: /etc/fail2ban/jail.d
+    patterns: "10-*.local"
+    file_type: file
+  register: found_extra_jails
+  changed_when: false
+  tags:
+    - fail2ban
+    - fail2ban_cleanup
+
+- name: Determine stale files to remove
+  ansible.builtin.set_fact:
+    stale_files: >-
+      {{
+        found_extra_jails.files
+        | map(attribute='path')
+        | difference(managed_files)
+        | list
+      }}
+  tags:
+    - fail2ban
+    - fail2ban_cleanup
+
+- name: Remove unmanaged extra jail files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ stale_files }}"
+  loop_control:
+    label: "{{ item | basename }}"
+  notify: Reload fail2ban
+  when: stale_files | length > 0
+  tags:
+    - fail2ban
+    - fail2ban_cleanup

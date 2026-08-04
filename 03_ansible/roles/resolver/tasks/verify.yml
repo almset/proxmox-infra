@@ -1,0 +1,51 @@
+---
+- name: Wait for systemd-resolved to settle
+  ansible.builtin.pause:
+    seconds: 2
+
+- name: Check resolvectl DNS servers for the interface
+  ansible.builtin.command: "resolvectl dns {{ resolver_target_interface }}"
+  register: resolvectl_dns_output
+  changed_when: false
+
+- name: Assert that all expected DNS servers are active
+  ansible.builtin.assert:
+    that:
+      - expected_dns in resolvectl_dns_output.stdout
+    fail_msg: "Ожидаемый DNS {{ expected_dns }} не найден. Вывод: {{ resolvectl_dns_output.stdout }}"
+  loop: "{{ resolver_nameservers }}"
+  loop_control:
+    loop_var: expected_dns
+
+- name: Check resolvectl search domains for the interface
+  ansible.builtin.command: "resolvectl domain {{ resolver_target_interface }}"
+  register: resolvectl_domain_output
+  changed_when: false
+
+- name: Assert that all expected search domains are active
+  ansible.builtin.assert:
+    that:
+      - expected_domain in resolvectl_domain_output.stdout
+    fail_msg: "Ожидаемый домен {{ expected_domain }} не найден. Вывод: {{ resolvectl_domain_output.stdout }}"
+  loop: "{{ resolver_search_domains }}"
+  loop_control:
+    loop_var: expected_domain
+
+- name: Verify DNS server resolution capability (Internal)
+  ansible.builtin.command: "resolvectl query {{ resolver_dns_verification_host }}"
+  register: dns_server_test
+  changed_when: false
+  failed_when: dns_server_test.rc != 0
+  retries: 3
+  delay: 2
+  until: dns_server_test.rc == 0
+
+- name: Verify EXTERNAL DNS resolution (Optional)
+  ansible.builtin.command: "resolvectl query github.com"
+  register: external_dns_test
+  changed_when: false
+  failed_when: external_dns_test.rc != 0
+  retries: 3
+  delay: 2
+  until: external_dns_test.rc == 0
+  when: resolver_verify_external | bool

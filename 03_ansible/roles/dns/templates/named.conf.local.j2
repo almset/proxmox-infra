@@ -1,0 +1,17 @@
+//
+// Forward zone
+//
+zone "{{ dns_domain }}" {
+    type master;
+    file "/etc/bind/db.{{ dns_domain }}";
+    allow-update { none; };
+};
+
+//
+// Reverse zone
+//
+zone "{{ dns_reverse_zone }}" {
+    type master;
+    file "/etc/bind/{{ dns_reverse_zone_file }}";
+    allow-update { none; };
+};

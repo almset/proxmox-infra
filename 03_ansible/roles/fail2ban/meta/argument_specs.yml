@@ -1,0 +1,191 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure fail2ban
+    description: Install and configure fail2ban with safe cleanup of managed jails
+    options:
+      fail2ban_service_name:
+        type: str
+        default: fail2ban
+        description: Name of the fail2ban service
+      fail2ban_service_state:
+        type: str
+        default: started
+        choices:
+          - started
+          - stopped
+          - restarted
+          - reloaded
+        description: Desired state of the fail2ban service
+      fail2ban_service_enabled:
+        type: bool
+        default: true
+        description: Whether to enable the fail2ban service at boot
+      fail2ban_manage_service:
+        type: bool
+        default: true
+        description: Whether to manage the fail2ban service state
+      fail2ban_packages:
+        type: list
+        elements: str
+        default:
+          - fail2ban
+        description: List of packages to install
+      fail2ban_default:
+        type: dict
+        required: true
+        description: Global fail2ban configuration
+        options:
+          backend:
+            type: str
+            default: auto
+            choices:
+              - auto
+              - systemd
+              - polling
+            description: Backend for log monitoring (auto recommended for portability)
+          banaction:
+            type: str
+            default: iptables-multiport
+            description: Default ban action (iptables-multiport for maximum compatibility)
+          bantime:
+            type: int
+            default: 3600
+            description: Default ban time in seconds
+          findtime:
+            type: int
+            default: 600
+            description: Default find time in seconds
+          maxretry:
+            type: int
+            default: 5
+            description: Default maximum retries
+          bantime_increment:
+            type: bool
+            default: true
+            description: Enable progressive ban time
+          bantime_factor:
+            type: int
+            default: 1
+            description: Ban time increment factor
+          bantime_formula_enabled:
+            type: bool
+            default: true
+            description: Enable custom ban time formula
+          bantime_formula:
+            type: str
+            default: "ban.Time * (1.0 + banFactor*log(1+banCount))"
+            description: Custom ban time formula
+          bantime_overalljails:
+            type: bool
+            default: true
+            description: Count failures across all jails
+          ignoreip:
+            type: list
+            elements: str
+            default:
+              - 127.0.0.1/8
+              - ::1
+            description: List of IPs to whitelist
+      fail2ban_sshd:
+        type: dict
+        required: true
+        description: SSH jail configuration
+        options:
+          enabled:
+            type: bool
+            default: true
+            description: Enable SSH jail
+          port:
+            type: str
+            default: ssh
+            description: SSH port
+          logpath:
+            type: str
+            required: true
+            description: Path to SSH log file (ignored when backend=systemd)
+          maxretry:
+            type: int
+            default: 5
+            description: Maximum retries for SSH jail
+          bantime:
+            type: int
+            default: 3600
+            description: Ban time for SSH jail
+          findtime:
+            type: int
+            default: 600
+            description: Find time for SSH jail
+      fail2ban_recidive:
+        type: dict
+        required: false
+        description: Recidive jail configuration (bans persistent offenders)
+        options:
+          enabled:
+            type: bool
+            default: true
+            description: Enable recidive jail
+          banaction:
+            type: str
+            default: "%(banaction_allports)s"
+            description: Ban action for recidive
+          logpath:
+            type: str
+            default: /var/log/fail2ban.log
+            description: Path to fail2ban log
+          maxretry:
+            type: int
+            default: 3
+            description: Maximum retries
+          bantime:
+            type: int
+            default: 604800
+            description: Ban time (1 week)
+          findtime:
+            type: int
+            default: 43200
+            description: Find time (12 hours)
+      fail2ban_extra_jails:
+        type: list
+        elements: dict
+        default: []
+        description: List of extra jails to configure
+        options:
+          name:
+            type: str
+            required: true
+            description: Jail name (used as filename prefix 10-<name>.local)
+          enabled:
+            type: bool
+            default: true
+            description: Enable this jail
+          port:
+            type: str
+            default: http,https
+            description: Ports to monitor
+          filter:
+            type: str
+            description: Filter name (defaults to jail name)
+          logpath:
+            type: str
+            required: true
+            description: Path to log file (ignored when backend=systemd)
+          maxretry:
+            type: int
+            default: 5
+            description: Maximum retries
+          bantime:
+            type: int
+            default: 3600
+            description: Ban time in seconds
+          findtime:
+            type: int
+            default: 600
+            description: Find time in seconds
+          action:
+            type: str
+            description: Custom action (optional)
+      fail2ban_cleanup_enabled:
+        type: bool
+        default: false
+        description: Enable cleanup of unmanaged extra jails

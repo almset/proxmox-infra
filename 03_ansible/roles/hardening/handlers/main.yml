@@ -1,0 +1,31 @@
+---
+# SSH handlers — порядок выполнения важен:
+# 1. Сначала валидация конфига (sshd -t)
+# 2. Только при успешной валидации — reload сервиса
+# Handlers с одинаковым listen выполняются в порядке объявления.
+# Если первый handler упадёт, play остановится и reload не выполнится.
+
+- name: Validate SSH configuration
+  listen: Reload ssh
+  ansible.builtin.command:
+    cmd: sshd -t
+  changed_when: false
+
+- name: Reload SSH service
+  listen: Reload ssh
+  ansible.builtin.systemd:
+    name: "{{ hardening_ssh_service_name }}"
+    state: reloaded
+    enabled: true
+
+# failed_when: false защищает от edge-cases:
+# - net.bridge.bridge-nf-call-iptables без загруженного br_netfilter
+# - kernel.yama.ptrace_scope в некоторых контейнерах
+# - другие параметры, которые могут не примениться в специфичных окружениях
+# Реальное применение параметров проверяется в Molecule verify.
+- name: Reload sysctl parameters
+  listen: Reload sysctl
+  ansible.builtin.command:
+    cmd: sysctl -p /etc/sysctl.d/99-hardening.conf
+  failed_when: false
+  changed_when: false
