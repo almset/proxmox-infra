@@ -1,4 +1,5 @@
-## In this folder you can find packer configs for creating templates for Proxmox server:
+## Packer templates 
+In this folder you can find packer configs for creating templates for Proxmox server:
 1. Ubuntu 24.04 LTS
 2. Windows server 2022
 
