@@ -1,6 +1,6 @@
 # Promxox virtual infrastructure
 
-This project describes automation for proxmox server with base IAC instrument such as:
+This project describes automation for proxmox server with base IAC instruments such as:
 1. Packer (Is needed to create tempates for Linux or Windows machines with packages node exporter, wazuh, vault, zabbix and base hardening)
 2. Terragrunt/Terraform (Creating infrastgructure virtual machines from packer templates, example DNS server Bind, Gateway with iptables and others)
 3. Ansible (automaticaly configure infrstructure servers such as dns server, gateway, basic cluster k8s rke2 or kubeadm,  base role for installing and updating your usefull packages)
