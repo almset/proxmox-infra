@@ -4,6 +4,7 @@ In this folder you can find packer configs for creating templates for Proxmox se
 2. Windows server 2022
 
 After creating templates you must follow to 02_terragrunt directory. 
-Then edit Promox credentials with VM's list for creating - linux or windows hosts.
+Then edit Promox credentials with VM's list for creating - linux or windows hosts. 
+After this, run start.sh for deploy infrastructure.
 
-Next step - configure virtual server with ansible. 
+Next step - configure virtual server with ansible, run dns_server, gateway, base playbooks with needed roles. 
