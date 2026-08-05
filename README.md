@@ -3,8 +3,8 @@
 This project describes automation for proxmox server with base IAC instrument such as:
 1. Packer (Is needed to create tempates for Linux or Windows machines with packages node exporter, wazuh, vault, zabbix and base hardening)
 2. Terragrunt/Terraform (Creating infrastgructure virtual machines, example DNS server Bind, Gateway with iptables and other )
-3. Ansible (infrstructure servers such as dns server, gateway, base roles)
-4. Ansible K8s cluster (just installing cluster with configuring ArgoCD remote URL)
+3. Ansible (infrstructure servers such as dns server, gateway, basic cluster k8s rke2 or kubeadm,  base role for installing and updating your usefull packages)
+4. Ansible K8s cluster (just installing  with configuring ArgoCD remote URL)
 
 Details:
 - Packer: used to create templates Ubuntu Server and Windows Server
