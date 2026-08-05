@@ -1,0 +1,19 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: enforce-gateway-api-only
+  annotations:
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/category: network
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: reject-legacy-ingress
+      match:
+        any:
+        - resources:
+            kinds: [networking.k8s.io/v1/Ingress]
+      validate:
+        message: "Использование устаревшего ресурса Ingress запрещено. Используйте Gateway API (HTTPRoute)."
+        deny: {}

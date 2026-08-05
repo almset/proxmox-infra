@@ -1,0 +1,5 @@
+---
+- name: Include specific GitOps engine driver tasks
+  ansible.builtin.include_tasks: "{{ gitops.engine }}.yml"
+  # Драйвер полностью отвечает за свою установку и bootstrap.
+  # Общий слой не знает ни про Application, ни про GitRepository.

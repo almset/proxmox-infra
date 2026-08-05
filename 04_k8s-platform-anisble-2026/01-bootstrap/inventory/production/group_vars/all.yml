@@ -1,0 +1,59 @@
+---
+############################################################
+# 1. Настройки доступа и SSH
+############################################################
+ssh_private_key: /home/ubuntu/04_terragrunt/secrets/ansible_key
+
+ansible_user: ansible
+ansible_ssh_private_key_file: "{{ ssh_private_key }}"
+ansible_ssh_common_args: >-
+  -o ProxyCommand="ssh -i {{ ssh_private_key }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ansible@10.0.10.5"
+  -o StrictHostKeyChecking=no
+  -o UserKnownHostsFile=/dev/null
+
+############################################################
+# 2. Фиксированные версии (переопределяют defaults роли, если нужно)
+############################################################
+kubernetes_version: "1.31.4"
+kubernetes: "1.31.4"
+kubectl_version: "v{{ kubernetes_version }}"
+helm_version: "v3.16.2"
+
+############################################################
+# 3. Пути и артефакты
+############################################################
+artifacts_dir: "{{ playbook_dir }}/../artifacts"
+master_kubeconfig_path: "/etc/rancher/rke2/rke2.yaml"
+#master_kubeconfig_path: "{{ artifacts_dir }}/kubeconfig"
+controller_kubeconfig_path: "{{ artifacts_dir }}/kubeconfig"
+python_venv_path: "/opt/ansible/venv"
+kubeconfig_path: "{{ artifacts_dir }}/kubeconfig"
+kubeconfig: "{{ artifacts_dir }}/kubeconfig"
+
+############################################################
+# 4. Глобальное окружение
+############################################################
+controller_env:
+  PATH: "{{ python_venv_path }}/bin:{{ ansible_env.PATH }}"
+  KUBECONFIG: "{{ controller_kubeconfig_path }}"
+
+############################################################
+# 5. GitOps / Platform
+############################################################
+#gitops:
+#  engine: argocd
+#  version: "7.5.0"
+#  namespace: gitops-system
+#  #repo_url: "https://github.com/your-org/platform-gitops.git"
+#  repo_url: "https://github.com/almset/k8s-platform-2026.git"
+#  revision: "main"
+
+gitops:
+  engine: argocd
+  version: "7.5.0" # или актуальная версия чарта
+  namespace: gitops-system
+  repo_url: "https://github.com/almset/k8s-platform-2026.git" # <-- ПРАВИЛЬНЫЙ URL MONOREPO
+  revision: "master" # или master, или имя ветки
+  path: "02-gitops/bootstrap/root" # <-- Путь внутри этого же репозитория
+
+

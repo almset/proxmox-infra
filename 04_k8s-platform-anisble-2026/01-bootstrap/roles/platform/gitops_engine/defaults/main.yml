@@ -1,0 +1,4 @@
+# ОШИБКА ЗДЕСЬ:
+#module_defaults:
+#   kubernetes.core.k8s_info:
+     # kubeconfig: "{{ master_kubeconfig_path }}"  <-- Если это закомментировано, Ansible видит null

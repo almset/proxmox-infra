@@ -1,0 +1,56 @@
+---
+- name: Verify kubectl version
+  ansible.builtin.command: kubectl version --client 
+  register: kubectl_out
+  changed_when: false
+
+- name: Print kubectl version
+  ansible.builtin.debug:
+    var: kubectl_out.stdout_lines
+
+- name: Verify helm version
+  ansible.builtin.command: helm version --short
+  register: helm_out
+  changed_when: false
+
+- name: Print helm version
+  ansible.builtin.debug:
+    var: helm_out.stdout_lines
+
+- name: Verify Helm environment
+  ansible.builtin.command: helm env
+  register: helm_env_out
+  changed_when: false
+  environment: "{{ controller_env }}"
+
+- name: Print Helm environment
+  ansible.builtin.debug:
+    var: helm_env_out.stdout_lines
+
+- name: Verify 'kubernetes' python module import
+  ansible.builtin.command: "{{ python_venv_path }}/bin/python3 -c 'import kubernetes'"
+  changed_when: false
+
+- name: Verify 'openshift' python module import
+  ansible.builtin.command: "{{ python_venv_path }}/bin/python3 -c 'import openshift'"
+  changed_when: false
+
+- name: Verify cluster connectivity (if kubeconfig exists)
+  block:
+    - name: Check kubeconfig existence
+      ansible.builtin.stat:
+        path: "{{ kubeconfig_path }}"
+      register: kubeconfig_stat
+
+#    - name: Run kubectl cluster-info
+#      ansible.builtin.command: kubectl cluster-info
+#      register: cluster_info
+#      changed_when: false
+#      failed_when: false
+#      environment: "{{ controller_env }}"
+#      when: kubeconfig_stat.stat.exists
+#
+#    - name: Print cluster info
+#      ansible.builtin.debug:
+#        var: cluster_info.stdout_lines
+#      when: kubeconfig_stat.stat.exists

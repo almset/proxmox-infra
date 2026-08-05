@@ -1,0 +1,36 @@
+name: GitOps Supply Chain & Policy Gate
+on:
+  pull_request:
+    paths: ['components/**', 'clusters/**']
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./components
+          format: spdx-json
+          output-file: sbom.json
+
+      - name: Scan SBOM for vulnerabilities (Grype)
+        uses: anchore/scan-action@v3
+        with:
+          sbom: sbom.json
+          fail-build: true
+          severity-cutoff: high
+
+      - name: Trivy Config Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      - name: Evaluate Organizational Policies (Conftest / OPA)
+        run: |
+          conftest test components/ --policy .github/policies/ --all-namespaces

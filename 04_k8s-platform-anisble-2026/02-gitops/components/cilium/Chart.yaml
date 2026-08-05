@@ -1,0 +1,11 @@
+apiVersion: v2
+name: cilium-platform
+version: 1.0.0
+# АРХИТЕКТУРНАЯ ОГОВОРКА: 
+# Cilium (CNI + eBPF LB + Gateway API + Hubble) является предпочтительным стеком.
+# MetalLB + отдельный Ingress-контроллер остаются допустимым вариантом для 
+# специфичных bare-metal сред, где eBPF недоступен или не одобрен политиками.
+dependencies:
+  - name: cilium
+    version: "1.15.0"
+    repository: "oci://ghcr.io/cilium/charts"

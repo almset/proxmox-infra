@@ -1,0 +1,25 @@
+---
+- name: Create Python virtual environment directory
+  ansible.builtin.file:
+    path: "{{ python_venv_path }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create Python virtual environment
+  ansible.builtin.command: python3 -m venv {{ python_venv_path }}
+  args:
+    creates: "{{ python_venv_path }}/bin/activate"
+
+- name: Upgrade pip in virtual environment
+  ansible.builtin.pip:
+    name: pip
+    state: latest
+    virtualenv: "{{ python_venv_path }}"
+
+- name: Install K8s Python dependencies in venv
+  ansible.builtin.pip:
+    name: "{{ controller_python_packages }}"
+    virtualenv: "{{ python_venv_path }}"
+    state: present

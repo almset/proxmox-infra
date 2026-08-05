@@ -1,0 +1,20 @@
+---
+- name: Include OS packages installation
+  ansible.builtin.include_tasks: packages.yml
+  tags: [packages, setup]
+
+- name: Include Python environment setup
+  ansible.builtin.include_tasks: python.yml
+  tags: [python, setup]
+
+- name: Include kubectl installation
+  ansible.builtin.include_tasks: kubectl.yml
+  tags: [kubectl, tools]
+
+- name: Include helm installation
+  ansible.builtin.include_tasks: helm.yml
+  tags: [helm, tools]
+
+- name: Include verification tasks
+  ansible.builtin.include_tasks: verify.yml
+  tags: [verify]

@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: "DevOps Team"
+  description: "Prerequisites for Ansible Controller on Ubuntu (Python venv, kubectl, helm)"
+  license: "MIT"
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+  galaxy_tags:
+    - controller
+    - kubernetes
+    - helm
+    - ubuntu
+
+dependencies: []
