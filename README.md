@@ -10,4 +10,4 @@ Details:
 - Packer: used to create templates Ubuntu Server and Windows Server
 - Terragrunt: create VM's from templates, you can create VM list to easy deploy
 - Ansible: automaticaly configures created VM's - dns server, k8s-master and worker nodes, gateway, base operations such as updating, firewall for opening or closing ports on VM's and etc...
-- Ansible k8s platform: install argocd, you can push your remote url in to ansible config for automaticaly deploy needed cluster configuration. 
+- Ansible k8s platform: installing argocd, you can push your remote url in to ansible config for automaticaly deploy needed cluster configuration. 
