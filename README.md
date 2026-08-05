@@ -186,3 +186,117 @@ gitops/                  Example GitOps repository
 * Production-ready Kubernetes bootstrap
 * GitOps-driven application deployment
 * Modular and reusable architecture
+
+## Quick Start
+
+The deployment process consists of four independent stages.
+
+### 1. Build VM Templates
+
+Create reusable Ubuntu or Windows templates with Packer.
+
+```bash
+cd packer
+
+packer init .
+packer validate .
+packer build ubuntu-server.pkr.hcl
+```
+
+After completion, a Proxmox VM template will be available.
+
+---
+
+### 2. Provision Virtual Machines
+
+Deploy the infrastructure using Terragrunt.
+
+```bash
+cd terragrunt/live/production
+
+terragrunt run-all apply
+```
+
+This stage creates all required virtual machines, for example:
+
+* Bastion Host
+* Gateway
+* DNS Server
+* Kubernetes Control Plane
+* Kubernetes Worker Nodes
+
+Terraform outputs are automatically used later by Ansible Dynamic Inventory.
+
+---
+
+### 3. Configure Infrastructure
+
+Configure all virtual machines.
+
+```bash
+cd ansible
+
+./scripts/start.sh bootstrap
+```
+
+or execute the complete playbook.
+
+```bash
+ansible-playbook playbooks/site.yml
+```
+
+Typical tasks include:
+
+* Operating system configuration
+* Package installation
+* SSH hardening
+* Firewall configuration
+* DNS server
+* Gateway
+* Kubernetes installation (RKE2 or kubeadm)
+
+---
+
+### 4. Bootstrap Kubernetes Platform
+
+Install Argo CD and connect it to your GitOps repository.
+
+```bash
+cd ansible-k8s-platform
+
+ansible-playbook playbooks/platform.yml
+```
+
+Configure your Git repository URL in the inventory or group variables before deployment.
+
+After Argo CD is installed, the cluster automatically synchronizes with your GitOps repository.
+
+---
+
+## Verify Deployment
+
+Check Terraform resources.
+
+```bash
+terragrunt output
+```
+
+Check Ansible connectivity.
+
+```bash
+ansible all -m ping
+```
+
+Verify Kubernetes.
+
+```bash
+kubectl get nodes
+```
+
+Verify Argo CD.
+
+```bash
+kubectl get pods -n argocd
+```
+
+If the GitOps repository is configured correctly, Argo CD will automatically deploy all platform components and applications.
